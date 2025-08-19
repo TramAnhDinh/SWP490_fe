@@ -100,18 +100,6 @@ const LoginPage = () => {
               {isLoggingIn ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </Button>
           </form>
-
-          {/* Register link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Chưa có tài khoản?{" "}
-              <Link
-                to="/register"
-                className="font-medium text-primary-600 hover:text-primary-500">
-                Đăng ký ngay
-              </Link>
-            </p>
-          </div>
         </Card>
       </div>
     </div>

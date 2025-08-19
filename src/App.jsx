@@ -50,8 +50,10 @@ import VehicleDetailPage from "./pages/vehicles/VehicleDetailPage";
 // Vehicle Management Pages
 import VehicleListPage from "./pages/vehicles/VehicleListPage";
 import BrandCreatePage from "./pages/vehicles/BrandCreatePage";
+import BrandEditPage from "./pages/vehicles/BrandEditPage";
 import BrandDetailPage from "./pages/vehicles/BrandDetailPage";
 import ModelCreatePage from "./pages/vehicles/ModelCreatePage";
+import ModelEditPage from "./pages/vehicles/ModelEditPage";
 import ModelDetailPage from "./pages/vehicles/ModelDetailPage";
 
 // Design & Template Module Pages
@@ -221,11 +223,13 @@ function App() {
                   element={<BrandCreatePage />}
                 />
                 <Route path="vehicles/brands/:id" element={<BrandDetailPage />} />
+                <Route path="vehicles/brands/:id/edit" element={<BrandEditPage />} />
                 <Route
                   path="vehicles/models/create"
                   element={<ModelCreatePage />}
                 />
                 <Route path="vehicles/models/:id" element={<ModelDetailPage />} />
+                <Route path="vehicles/models/:id/edit" element={<ModelEditPage />} />
 
                 {/* Design & Template Module Routes */}
                 <Route path="designs" element={<DesignGalleryPage />} />

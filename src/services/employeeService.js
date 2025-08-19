@@ -43,7 +43,17 @@ export const employeeService = {
 
   // Update employee
   updateEmployee: async (id, employeeData) => {
+    console.log('EmployeeService - Updating employee:', { id, employeeData });
     const response = await apiClient.put(API_ENDPOINTS.EMPLOYEES.BY_ID(id), employeeData);
+    console.log('EmployeeService - Update response:', response.data);
+    return response.data;
+  },
+
+  // Update employee with PATCH method (alternative)
+  updateEmployeePatch: async (id, employeeData) => {
+    console.log('EmployeeService - Patching employee:', { id, employeeData });
+    const response = await apiClient.patch(API_ENDPOINTS.EMPLOYEES.BY_ID(id), employeeData);
+    console.log('EmployeeService - Patch response:', response.data);
     return response.data;
   },
 

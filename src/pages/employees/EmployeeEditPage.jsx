@@ -21,7 +21,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 
 const EmployeeEditPage = () => {
-    const { employeeId } = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
@@ -45,16 +45,41 @@ const EmployeeEditPage = () => {
 
     // Get employee data
     const { data: employee, isLoading: isEmployeeLoading, error: employeeError } = useQuery({
-        queryKey: ['employees', employeeId],
-        queryFn: () => employeeService.getEmployeeById(employeeId),
-        enabled: !!employeeId,
+        queryKey: ['employee', id],
+        queryFn: async () => {
+            const result = await employeeService.getEmployeeById(id);
+            console.log('Employee data from API:', result);
+            return result;
+        },
+        enabled: !!id,
     });
 
     // Get roles data
-    const { data: roles = [], isLoading: rolesLoading } = useQuery({
+    const { data: roles = [], isLoading: rolesLoading, error: rolesError } = useQuery({
         queryKey: ['roles'],
         queryFn: employeeService.getRoles,
     });
+
+    console.log('Roles data:', roles);
+    console.log('Roles loading:', rolesLoading);
+    console.log('Roles error:', rolesError);
+
+    // Lọc roles để chỉ hiển thị các vai trò staff (không bao gồm Customer)
+    const staffRoles = [
+        { roleID: 'MANAGER', roleName: 'Manager' },
+        { roleID: 'SALES', roleName: 'Sales' },
+        { roleID: 'DESIGNER', roleName: 'Designer' },
+        { roleID: 'TECHNICIAN', roleName: 'Technician' },
+    ];
+
+    // Sử dụng roles từ API nếu có, nhưng lọc để chỉ lấy staff roles
+    const availableRoles = roles.length > 0
+        ? roles.filter(role =>
+            staffRoles.some(staffRole => staffRole.roleID === role.roleID)
+        )
+        : staffRoles;
+
+    console.log('Available roles:', availableRoles);
 
     // Get stores data
     const { data: stores = [], isLoading: storesLoading } = useQuery({
@@ -71,12 +96,14 @@ const EmployeeEditPage = () => {
     // Update employee mutation
     const updateEmployeeMutation = useMutation({
         mutationFn: ({ id, data }) => employeeService.updateEmployee(id, data),
-        onSuccess: () => {
+        onSuccess: (data) => {
+            console.log('Employee mutation success:', data);
             toast.success('Cập nhật thông tin nhân viên thành công!');
             queryClient.invalidateQueries(['employees']);
-            navigate('/employees');
+            queryClient.invalidateQueries(['employee', id]);
         },
         onError: (error) => {
+            console.error('Employee mutation error:', error);
             toast.error('Lỗi khi cập nhật nhân viên: ' + (error.response?.data?.message || error.message));
         },
     });
@@ -95,8 +122,12 @@ const EmployeeEditPage = () => {
 
     // Load employee data into form
     useEffect(() => {
+        console.log('Employee data changed:', employee);
+        console.log('Employee ID from params:', id);
+
         if (employee) {
-            setFormData({
+            console.log('Loading employee data:', employee);
+            const newFormData = {
                 firstName: employee.firstName || '',
                 lastName: employee.lastName || '',
                 email: employee.email || '',
@@ -109,9 +140,11 @@ const EmployeeEditPage = () => {
                     isActive: employee.account?.isActive ?? true
                 },
                 roleIds: employee.roles?.map(role => role.roleID) || []
-            });
+            };
+            console.log('Setting form data:', newFormData);
+            setFormData(newFormData);
         }
-    }, [employee]);
+    }, [employee, id]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -159,7 +192,7 @@ const EmployeeEditPage = () => {
     // Kiểm tra xem cửa hàng đã có Manager chưa (trừ nhân viên hiện tại)
     const checkStoreHasManager = (storeId) => {
         return currentEmployees.some(employee =>
-            employee.employeeID !== employeeId && // Loại trừ nhân viên hiện tại
+            employee.employeeID !== id && // Loại trừ nhân viên hiện tại
             employee.storeID === storeId &&
             employee.roles?.some(role => role.roleName === 'Manager')
         );
@@ -172,7 +205,7 @@ const EmployeeEditPage = () => {
     };
 
     const handleRoleChange = (roleId) => {
-        const selectedRole = roles.find(role => role.roleID === roleId);
+        const selectedRole = availableRoles.find(role => role.roleID === roleId);
 
         // Nếu chọn Manager role, kiểm tra store đã có Manager chưa
         if (selectedRole?.roleName === 'Manager' && formData.storeID) {
@@ -239,7 +272,7 @@ const EmployeeEditPage = () => {
         }
 
         // Kiểm tra Manager role validation
-        const selectedRole = roles.find(role => role.roleID === formData.roleIds[0]);
+        const selectedRole = availableRoles.find(role => role.roleID === formData.roleIds[0]);
         if (selectedRole?.roleName === 'Manager') {
             if (checkStoreHasManager(formData.storeID)) {
                 toast.error('Cửa hàng này đã có Manager! Mỗi cửa hàng chỉ được phép có 1 Manager.');
@@ -248,6 +281,19 @@ const EmployeeEditPage = () => {
         }
 
         try {
+            console.log('Submitting employee data:', {
+                id,
+                employeeData: {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    phoneNumber: formData.phoneNumber,
+                    address: formData.address,
+                    storeID: formData.storeID,
+                    roleIds: formData.roleIds
+                }
+            });
+
             // Bước 1: Cập nhật Employee
             const employeeData = {
                 firstName: formData.firstName,
@@ -256,10 +302,35 @@ const EmployeeEditPage = () => {
                 phoneNumber: formData.phoneNumber,
                 address: formData.address,
                 storeID: formData.storeID,
-                roleIds: formData.roleIds
+                roleIds: formData.roleIds,
+                // Thêm các field có thể cần thiết
+                isActive: true,
+                employeeID: id
             };
 
-            await updateEmployeeMutation.mutateAsync({ id: employeeId, data: employeeData });
+            console.log('Sending employee data to API:', employeeData);
+            console.log('Address field value:', formData.address);
+            console.log('Address field type:', typeof formData.address);
+
+            // Thử sử dụng endpoint khác hoặc format khác
+            let employeeResult;
+            try {
+                employeeResult = await updateEmployeeMutation.mutateAsync({ id: id, data: employeeData });
+                console.log('Employee update result:', employeeResult);
+            } catch (error) {
+                console.error('PUT method failed:', error);
+
+                // Thử PATCH method nếu PUT thất bại
+                try {
+                    console.log('Trying PATCH method...');
+                    const patchResult = await employeeService.updateEmployeePatch(id, employeeData);
+                    console.log('PATCH method result:', patchResult);
+                    employeeResult = patchResult;
+                } catch (patchError) {
+                    console.error('PATCH method also failed:', patchError);
+                    throw patchError; // Re-throw để xử lý ở catch block bên ngoài
+                }
+            }
 
             // Bước 2: Cập nhật Account (nếu có)
             if (employee?.account?.accountID) {
@@ -268,22 +339,38 @@ const EmployeeEditPage = () => {
                     isActive: formData.accountData.isActive
                 };
 
-                await updateAccountMutation.mutateAsync({
+                console.log('Updating account:', {
+                    accountID: employee.account.accountID,
+                    accountData
+                });
+
+                const accountResult = await updateAccountMutation.mutateAsync({
                     id: employee.account.accountID,
                     data: accountData
                 });
+                console.log('Account update result:', accountResult);
             }
 
             toast.success('Cập nhật thông tin nhân viên thành công!');
             queryClient.invalidateQueries(['employees']);
             queryClient.invalidateQueries(['accounts']);
+            queryClient.invalidateQueries(['employee', id]);
             navigate('/employees');
 
         } catch (error) {
             console.error('Error updating employee:', error);
-            toast.error('Có lỗi xảy ra khi cập nhật nhân viên');
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+            toast.error('Có lỗi xảy ra khi cập nhật nhân viên: ' + (error.response?.data?.message || error.message));
         }
     };
+
+    console.log('Loading states:', { isEmployeeLoading, rolesLoading, storesLoading, employeesLoading });
+    console.log('Employee data:', employee);
+    console.log('Form data:', formData);
 
     if (isEmployeeLoading || rolesLoading || storesLoading || employeesLoading) {
         return (
@@ -304,8 +391,8 @@ const EmployeeEditPage = () => {
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Không thể tải dữ liệu</h3>
                     <p className="text-gray-500 mb-4">Vui lòng thử lại sau</p>
-                    <Button onClick={() => navigate('/employees')}>
-                        Quay lại danh sách
+                    <Button onClick={() => navigate(-1)}>
+                        Quay lại
                     </Button>
                 </div>
             </div>
@@ -319,7 +406,7 @@ const EmployeeEditPage = () => {
                 <div className="flex items-center gap-4">
                     <Button
                         variant="outline"
-                        onClick={() => navigate('/employees')}
+                        onClick={() => navigate(-1)}
                         className="flex items-center gap-2"
                     >
                         <ArrowLeft className="h-4 w-4" />
@@ -428,25 +515,33 @@ const EmployeeEditPage = () => {
                                         Vai trò <span className="text-red-500">*</span>
                                     </label>
                                     <div className="space-y-2">
-                                        {roles.map((role) => (
-                                            <label key={role.roleID} className="flex items-center space-x-3">
-                                                <input
-                                                    type="radio"
-                                                    name="roleIds"
-                                                    value={role.roleID}
-                                                    checked={formData.roleIds.includes(role.roleID)}
-                                                    onChange={() => handleRoleChange(role.roleID)}
-                                                    disabled={role.roleName === 'Manager' && !canSelectManagerRole(formData.storeID)}
-                                                    className="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500"
-                                                />
-                                                <span className={`text-sm ${role.roleName === 'Manager' && !canSelectManagerRole(formData.storeID) ? 'text-gray-400' : 'text-gray-700'}`}>
-                                                    {role.roleName}
-                                                    {role.roleName === 'Manager' && !canSelectManagerRole(formData.storeID) && (
-                                                        <span className="text-red-500 ml-1">(Đã có Manager)</span>
-                                                    )}
-                                                </span>
-                                            </label>
-                                        ))}
+                                        {console.log('Rendering roles:', availableRoles)}
+                                        {availableRoles.length === 0 ? (
+                                            <p className="text-gray-500 text-sm">Đang tải vai trò...</p>
+                                        ) : (
+                                            availableRoles.map((role) => {
+                                                console.log('Rendering role:', role);
+                                                return (
+                                                    <label key={role.roleID} className="flex items-center space-x-3">
+                                                        <input
+                                                            type="radio"
+                                                            name="roleIds"
+                                                            value={role.roleID}
+                                                            checked={formData.roleIds.includes(role.roleID)}
+                                                            onChange={() => handleRoleChange(role.roleID)}
+                                                            disabled={role.roleName === 'Manager' && !canSelectManagerRole(formData.storeID)}
+                                                            className="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                        <span className={`text-sm ${role.roleName === 'Manager' && !canSelectManagerRole(formData.storeID) ? 'text-gray-400' : 'text-gray-700'}`}>
+                                                            {role.roleName}
+                                                            {role.roleName === 'Manager' && !canSelectManagerRole(formData.storeID) && (
+                                                                <span className="text-red-500 ml-1">(Đã có Manager)</span>
+                                                            )}
+                                                        </span>
+                                                    </label>
+                                                );
+                                            })
+                                        )}
                                     </div>
                                     {errors.roleIds && (
                                         <p className="mt-1 text-sm text-red-600">{errors.roleIds}</p>
@@ -521,7 +616,7 @@ const EmployeeEditPage = () => {
                                     type="button"
                                     variant="outline"
                                     className="w-full"
-                                    onClick={() => navigate('/employees')}
+                                    onClick={() => navigate(-1)}
                                     disabled={updateEmployeeMutation.isPending || updateAccountMutation.isPending}
                                 >
                                     Hủy bỏ

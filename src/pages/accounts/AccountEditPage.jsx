@@ -29,10 +29,13 @@ const AccountEditPage = () => {
     });
 
     // Get roles data
-    const { data: roles = [], isLoading: isRolesLoading } = useQuery({
+    const { data: allRoles = [], isLoading: isRolesLoading } = useQuery({
         queryKey: ['roles'],
         queryFn: () => accountService.getRoles?.() || Promise.resolve([]),
     });
+
+    // Filter out Admin role - không cho phép chọn Admin role
+    const roles = allRoles.filter(role => role.roleName !== 'Admin');
 
     // Update account mutation
     const updateMutation = useMutation({

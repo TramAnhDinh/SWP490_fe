@@ -11,14 +11,9 @@ const BrandCreatePage = () => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state
+  // Form state - chỉ cần brandName
   const [formData, setFormData] = useState({
-    brandName: '',
-    description: '',
-    country: '',
-    website: '',
-    logoUrl: '',
-    isActive: true
+    brandName: ''
   });
 
   // Validation state
@@ -31,7 +26,7 @@ const BrandCreatePage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -41,20 +36,12 @@ const BrandCreatePage = () => {
     }
   };
 
-  // Validation function
+  // Validation function - chỉ validate brandName
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.brandName.trim()) {
       newErrors.brandName = 'Tên thương hiệu là bắt buộc';
-    }
-
-    if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
-      newErrors.website = 'Website phải bắt đầu bằng http:// hoặc https://';
-    }
-
-    if (formData.logoUrl && !/^https?:\/\/.+/.test(formData.logoUrl)) {
-      newErrors.logoUrl = 'Logo URL phải bắt đầu bằng http:// hoặc https://';
     }
 
     setErrors(newErrors);
@@ -78,14 +65,14 @@ const BrandCreatePage = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Vui lòng kiểm tra lại thông tin');
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await createBrandMutation.mutateAsync(formData);
     } catch (error) {
@@ -123,12 +110,12 @@ const BrandCreatePage = () => {
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <Car className="h-5 w-5 mr-2" />
-              Thông tin cơ bản
+              Thông tin thương hiệu
             </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div>
               {/* Brand Name */}
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tên thương hiệu <span className="text-red-500">*</span>
                 </label>
@@ -143,85 +130,7 @@ const BrandCreatePage = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.brandName}</p>
                 )}
               </div>
-
-              {/* Country */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quốc gia
-                </label>
-                <Input
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  placeholder="Ví dụ: Nhật Bản, Mỹ..."
-                />
-              </div>
-
-              {/* Website */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Website
-                </label>
-                <Input
-                  name="website"
-                  type="url"
-                  value={formData.website}
-                  onChange={handleInputChange}
-                  placeholder="https://www.example.com"
-                  className={errors.website ? 'border-red-500' : ''}
-                />
-                {errors.website && (
-                  <p className="text-red-500 text-sm mt-1">{errors.website}</p>
-                )}
-              </div>
-
-              {/* Logo URL */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Logo URL
-                </label>
-                <Input
-                  name="logoUrl"
-                  type="url"
-                  value={formData.logoUrl}
-                  onChange={handleInputChange}
-                  placeholder="https://example.com/logo.png"
-                  className={errors.logoUrl ? 'border-red-500' : ''}
-                />
-                {errors.logoUrl && (
-                  <p className="text-red-500 text-sm mt-1">{errors.logoUrl}</p>
-                )}
-              </div>
             </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mô tả
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Mô tả về thương hiệu xe..."
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="isActive"
-                checked={formData.isActive}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span className="ml-2 text-sm text-gray-700">Thương hiệu đang hoạt động</span>
-            </label>
           </div>
 
           {/* Form Actions */}
