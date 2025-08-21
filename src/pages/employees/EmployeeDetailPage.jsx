@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 import { Card, Button, Badge, LoadingSpinner } from '../../components/common';
 import { employeeService } from '../../services/employeeService';
 import { orderService } from '../../services/orderService';
-import { installationService } from '../../services/installationService';
+import { getRoleInfo } from '../../utils/roleUtils';
 
 const EmployeeDetailPage = () => {
     const { id } = useParams();
@@ -33,10 +33,10 @@ const EmployeeDetailPage = () => {
         enabled: !!id
     });
 
-    // Fetch employee's installations
+    // Fetch employee's installations (sử dụng Orders thay thế)
     const { data: employeeInstallations = [] } = useQuery({
         queryKey: ['employeeInstallations', id],
-        queryFn: () => installationService.getInstallations({ technicianId: id }),
+        queryFn: () => orderService.getOrders({ employeeId: id, status: 'completed' }), // Sử dụng Orders đã hoàn thành thay thế
         enabled: !!id
     });
 
@@ -60,28 +60,18 @@ const EmployeeDetailPage = () => {
     // Calculate performance metrics
     const performanceMetrics = {
         totalOrders: employeeOrders.length,
-        completedOrders: employeeOrders.filter(order => order.status === 'completed').length,
+        completedOrders: employeeOrders.filter(order => order.orderStatus === 'completed').length,
         totalInstallations: employeeInstallations.length,
-        completedInstallations: employeeInstallations.filter(inst => inst.status === 'completed').length,
+        completedInstallations: employeeInstallations.filter(inst => inst.orderStatus === 'completed').length,
         averageRating: employeeOrders.length > 0
             ? (employeeOrders.reduce((sum, order) => sum + (order.rating || 0), 0) / employeeOrders.length).toFixed(1)
             : 0,
         completionRate: employeeOrders.length > 0
-            ? ((employeeOrders.filter(order => order.status === 'completed').length / employeeOrders.length) * 100).toFixed(1)
+            ? ((employeeOrders.filter(order => order.orderStatus === 'completed').length / employeeOrders.length) * 100).toFixed(1)
             : 0
     };
 
-    // Get role display info
-    const getRoleInfo = (role) => {
-        const roleConfig = {
-            'Admin': { color: 'bg-red-100 text-red-800', icon: Settings },
-            'Manager': { color: 'bg-blue-100 text-blue-800', icon: Users },
-            'Sales': { color: 'bg-green-100 text-green-800', icon: DollarSign },
-            'Designer': { color: 'bg-purple-100 text-purple-800', icon: Palette },
-            'Technician': { color: 'bg-orange-100 text-orange-800', icon: Car }
-        };
-        return roleConfig[role] || { color: 'bg-gray-100 text-gray-800', icon: User };
-    };
+
 
     // Get status info
     const getStatusInfo = (status) => {
@@ -96,9 +86,29 @@ const EmployeeDetailPage = () => {
     if (employeeLoading) return <LoadingSpinner />;
     if (!employee) return <div className="text-center py-8">Không tìm thấy nhân viên</div>;
 
-    const roleInfo = getRoleInfo(employee.role);
+    // Debug logging
+    console.log('Employee data in detail page:', employee);
+    console.log('Employee address:', employee.address);
+
+    // Lấy role từ accountRoleName hoặc roles array
+    const employeeRole = employee.accountRoleName || employee.roles?.[0]?.roleName || 'Unknown';
+    const roleInfo = getRoleInfo(employeeRole);
     const statusInfo = getStatusInfo(employee.status);
-    const RoleIcon = roleInfo.icon;
+
+    // Lấy icon component từ tên icon
+    const getIconComponent = (iconName) => {
+        const iconMap = {
+            'Settings': Settings,
+            'Users': Users,
+            'DollarSign': DollarSign,
+            'Palette': Palette,
+            'Car': Car,
+            'User': User
+        };
+        return iconMap[iconName] || User;
+    };
+
+    const RoleIcon = getIconComponent(roleInfo.icon);
     const StatusIcon = statusInfo.icon;
 
     return (
@@ -166,7 +176,7 @@ const EmployeeDetailPage = () => {
                             </h2>
                             <Badge className={roleInfo.color}>
                                 <RoleIcon className="w-3 h-3 mr-1" />
-                                {employee.role}
+                                {roleInfo.name}
                             </Badge>
                             <Badge className={statusInfo.color}>
                                 <StatusIcon className="w-3 h-3 mr-1" />
@@ -185,7 +195,7 @@ const EmployeeDetailPage = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <MapPin className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm text-gray-600">{employee.address}</span>
+                                <span className="text-sm text-gray-600">{employee.address || 'Chưa cập nhật'}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Building className="w-4 h-4 text-gray-400" />
@@ -251,7 +261,7 @@ const EmployeeDetailPage = () => {
                         {[
                             { id: 'overview', name: 'Tổng quan', icon: Eye },
                             { id: 'orders', name: 'Đơn hàng', icon: FileText },
-                            { id: 'installations', name: 'Lắp đặt', icon: Car },
+                            { id: 'installations', name: 'Đã hoàn thành', icon: Car },
                             { id: 'performance', name: 'Hiệu suất', icon: BarChart3 },
                             { id: 'documents', name: 'Tài liệu', icon: FileText }
                         ].map((tab) => {
@@ -294,16 +304,6 @@ const EmployeeDetailPage = () => {
                                             <span className="text-gray-600">Số điện thoại:</span>
                                             <span className="font-medium">{employee.phoneNumber}</span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Địa chỉ:</span>
-                                            <span className="font-medium">{employee.address}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Ngày vào làm:</span>
-                                            <span className="font-medium">
-                                                {new Date(employee.hireDate).toLocaleDateString('vi-VN')}
-                                            </span>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -315,14 +315,16 @@ const EmployeeDetailPage = () => {
                                             <span className="text-gray-600">Vai trò:</span>
                                             <Badge className={roleInfo.color}>
                                                 <RoleIcon className="w-3 h-3 mr-1" />
-                                                {employee.role}
+                                                {roleInfo.name}
                                             </Badge>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Trạng thái:</span>
-                                            <Badge className={statusInfo.color}>
-                                                <StatusIcon className="w-3 h-3 mr-1" />
-                                                {statusInfo.text}
+                                            <Badge className={employee.isActive
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-red-100 text-red-800'
+                                            }>
+                                                {employee.isActive ? 'Hoạt động' : 'Tạm dừng'}
                                             </Badge>
                                         </div>
                                         <div className="flex justify-between">
@@ -379,23 +381,23 @@ const EmployeeDetailPage = () => {
                                                     {order.orderID}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {order.customerName}
+                                                    {order.customerFullName || 'N/A'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {order.serviceName}
+                                                    {order.description || 'N/A'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <Badge className={
-                                                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                            order.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                                                        order.orderStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                                                            order.orderStatus === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
                                                                 'bg-gray-100 text-gray-800'
                                                     }>
-                                                        {order.status === 'completed' ? 'Hoàn thành' :
-                                                            order.status === 'in_progress' ? 'Đang xử lý' : 'Chờ xử lý'}
+                                                        {order.orderStatus === 'completed' ? 'Hoàn thành' :
+                                                            order.orderStatus === 'in_progress' ? 'Đang xử lý' : 'Chờ xử lý'}
                                                     </Badge>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                                                    {new Date(order.orderDate).toLocaleDateString('vi-VN')}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     {order.rating ? `${order.rating}/5` : 'Chưa đánh giá'}
@@ -411,10 +413,10 @@ const EmployeeDetailPage = () => {
                     {activeTab === 'installations' && (
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">Lịch sử lắp đặt</h3>
+                                <h3 className="text-lg font-semibold text-gray-900">Đơn hàng đã hoàn thành</h3>
                                 <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                                     <Plus className="w-4 h-4 mr-2" />
-                                    Tạo lắp đặt
+                                    Tạo đơn hàng
                                 </Button>
                             </div>
                             <div className="overflow-x-auto">
@@ -422,7 +424,7 @@ const EmployeeDetailPage = () => {
                                     <thead className="bg-gray-50">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Mã lắp đặt
+                                                Mã đơn hàng
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Khách hàng
@@ -434,40 +436,40 @@ const EmployeeDetailPage = () => {
                                                 Trạng thái
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Ngày lắp đặt
+                                                Ngày tạo
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Chất lượng
+                                                Tổng tiền
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {employeeInstallations.map((installation) => (
-                                            <tr key={installation.id} className="hover:bg-gray-50">
+                                        {employeeInstallations.map((order) => (
+                                            <tr key={order.orderID} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {installation.installationID}
+                                                    {order.orderID}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {installation.customerName}
+                                                    {order.customerFullName || 'N/A'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {installation.vehicleModel}
+                                                    {order.vehicleModelName || 'N/A'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <Badge className={
-                                                        installation.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                            installation.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                                                        order.orderStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                                                            order.orderStatus === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
                                                                 'bg-gray-100 text-gray-800'
                                                     }>
-                                                        {installation.status === 'completed' ? 'Hoàn thành' :
-                                                            installation.status === 'in_progress' ? 'Đang lắp đặt' : 'Chờ lắp đặt'}
+                                                        {order.orderStatus === 'completed' ? 'Hoàn thành' :
+                                                            order.orderStatus === 'in_progress' ? 'Đang xử lý' : 'Chờ xử lý'}
                                                     </Badge>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {new Date(installation.installationDate).toLocaleDateString('vi-VN')}
+                                                    {new Date(order.orderDate).toLocaleDateString('vi-VN')}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {installation.qualityScore ? `${installation.qualityScore}/10` : 'Chưa đánh giá'}
+                                                    {order.totalAmount ? `${order.totalAmount.toLocaleString('vi-VN')} VNĐ` : 'N/A'}
                                                 </td>
                                             </tr>
                                         ))}

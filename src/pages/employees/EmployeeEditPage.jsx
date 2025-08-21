@@ -311,12 +311,15 @@ const EmployeeEditPage = () => {
             console.log('Sending employee data to API:', employeeData);
             console.log('Address field value:', formData.address);
             console.log('Address field type:', typeof formData.address);
+            console.log('Form data address:', formData.address);
+            console.log('Employee data address:', employeeData.address);
 
             // Thử sử dụng endpoint khác hoặc format khác
             let employeeResult;
             try {
                 employeeResult = await updateEmployeeMutation.mutateAsync({ id: id, data: employeeData });
                 console.log('Employee update result:', employeeResult);
+                console.log('Employee update response data:', employeeResult);
             } catch (error) {
                 console.error('PUT method failed:', error);
 
@@ -352,9 +355,15 @@ const EmployeeEditPage = () => {
             }
 
             toast.success('Cập nhật thông tin nhân viên thành công!');
-            queryClient.invalidateQueries(['employees']);
-            queryClient.invalidateQueries(['accounts']);
-            queryClient.invalidateQueries(['employee', id]);
+
+            // Invalidate và refetch tất cả queries liên quan
+            await queryClient.invalidateQueries(['employees']);
+            await queryClient.invalidateQueries(['accounts']);
+            await queryClient.invalidateQueries(['employee', id]);
+
+            // Refetch employee data ngay lập tức
+            await queryClient.refetchQueries(['employee', id]);
+
             navigate('/employees');
 
         } catch (error) {

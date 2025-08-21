@@ -22,6 +22,7 @@ import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, Button, Input, LoadingSpinner, Badge } from '../../components/common';
 import { employeeService } from '../../services/employeeService';
+import { getRoleNameInVietnamese, getRoleBadgeColor } from '../../utils/roleUtils';
 
 const EmployeeListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -122,16 +123,7 @@ const EmployeeListPage = () => {
     }
   };
 
-  const getRoleBadgeColor = (role) => {
-    switch (role?.toLowerCase()) {
-      case 'admin': return 'bg-purple-100 text-purple-800';
-      case 'manager': return 'bg-blue-100 text-blue-800';
-      case 'sales': return 'bg-green-100 text-green-800';
-      case 'technician': return 'bg-orange-100 text-orange-800';
-      case 'designer': return 'bg-pink-100 text-pink-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+
 
   // Lọc bỏ Admin khỏi danh sách employees
   const nonAdminEmployees = employees.filter(employee =>
@@ -266,7 +258,7 @@ const EmployeeListPage = () => {
                 .filter(role => role.roleName !== 'Admin') // Lọc bỏ Admin khỏi dropdown
                 .map(role => (
                   <option key={role.roleID} value={role.roleName}>
-                    {role.roleName}
+                    {getRoleNameInVietnamese(role.roleName)}
                   </option>
                 ))}
             </select>
@@ -380,7 +372,7 @@ const EmployeeListPage = () => {
                     <div className="flex gap-1 flex-wrap">
                       {employee.roles?.map(role => (
                         <Badge key={role.roleID} className={getRoleBadgeColor(role.roleName)}>
-                          {role.roleName}
+                          {getRoleNameInVietnamese(role.roleName)}
                         </Badge>
                       )) || <Badge className="bg-gray-100 text-gray-800">Chưa phân quyền</Badge>}
                     </div>

@@ -149,7 +149,6 @@ const RolePermissionsDisplay = () => {
 
             // Design data actions
             store: 'Lưu trữ',
-            manage: 'Quản lý',
         };
         return actionLabels[action] || action;
     };
