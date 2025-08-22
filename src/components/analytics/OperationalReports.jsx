@@ -82,8 +82,8 @@ const OperationalReports = () => {
 
     return Math.round(
       completionScore * completionWeight +
-        timeScore * timeWeight +
-        utilizationScore * utilizationWeight
+      timeScore * timeWeight +
+      utilizationScore * utilizationWeight
     );
   };
 
@@ -340,8 +340,8 @@ const OperationalReports = () => {
                   {efficiencyScore >= 80
                     ? "Xuất sắc"
                     : efficiencyScore >= 60
-                    ? "Tốt"
-                    : "Cần cải thiện"}
+                      ? "Tốt"
+                      : "Cần cải thiện"}
                 </p>
               </div>
             </div>
@@ -376,8 +376,8 @@ const OperationalReports = () => {
                     <span className="font-medium">
                       {operationalData?.averageProcessingTime
                         ? `${operationalData.averageProcessingTime.toFixed(
-                            1
-                          )} ngày`
+                          1
+                        )} ngày`
                         : "N/A"}
                     </span>
                   </div>
@@ -391,7 +391,7 @@ const OperationalReports = () => {
                             100,
                             (10 -
                               (operationalData?.averageProcessingTime || 0)) *
-                              10
+                            10
                           )
                         )}%`,
                       }}></div>
@@ -406,10 +406,10 @@ const OperationalReports = () => {
                     <span className="font-medium">
                       {operationalData?.totalEmployees > 0
                         ? exportUtils.formatPercentage(
-                            (operationalData.activeEmployees /
-                              operationalData.totalEmployees) *
-                              100
-                          )
+                          (operationalData.activeEmployees /
+                            operationalData.totalEmployees) *
+                          100
+                        )
                         : "0%"}
                     </span>
                   </div>
@@ -417,13 +417,12 @@ const OperationalReports = () => {
                     <div
                       className="bg-purple-600 h-2 rounded-full"
                       style={{
-                        width: `${
-                          operationalData?.totalEmployees > 0
-                            ? (operationalData.activeEmployees /
-                                operationalData.totalEmployees) *
-                              100
-                            : 0
-                        }%`,
+                        width: `${operationalData?.totalEmployees > 0
+                          ? (operationalData.activeEmployees /
+                            operationalData.totalEmployees) *
+                          100
+                          : 0
+                          }%`,
                       }}></div>
                   </div>
                 </div>
@@ -672,22 +671,21 @@ const OperationalReports = () => {
                 <div
                   className="bg-blue-600 h-4 rounded-full"
                   style={{
-                    width: `${
-                      operationalData?.totalEmployees > 0
-                        ? (operationalData.activeEmployees /
-                            operationalData.totalEmployees) *
-                          100
-                        : 0
-                    }%`,
+                    width: `${operationalData?.totalEmployees > 0
+                      ? (operationalData.activeEmployees /
+                        operationalData.totalEmployees) *
+                      100
+                      : 0
+                      }%`,
                   }}></div>
               </div>
               <p className="text-sm text-gray-600">
                 {operationalData?.totalEmployees > 0
                   ? exportUtils.formatPercentage(
-                      (operationalData.activeEmployees /
-                        operationalData.totalEmployees) *
-                        100
-                    )
+                    (operationalData.activeEmployees /
+                      operationalData.totalEmployees) *
+                    100
+                  )
                   : "0%"}{" "}
                 tỷ lệ sử dụng
               </p>
@@ -703,15 +701,171 @@ const OperationalReports = () => {
                 </h4>
                 <p className="text-sm text-gray-600 mt-1">
                   {operationalData?.totalEmployees > 0 &&
-                  operationalData?.totalOrders > 0
+                    operationalData?.totalOrders > 0
                     ? `${(
-                        operationalData.totalOrders /
-                        operationalData.activeEmployees
-                      ).toFixed(1)} đơn/người`
+                      operationalData.totalOrders /
+                      operationalData.activeEmployees
+                    ).toFixed(1)} đơn/người`
                     : "0 đơn/người"}
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Store Performance */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Hiệu suất làm việc của từng cửa hàng
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Số đơn hàng theo cửa hàng</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={operationalData?.storePerformance || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="storeName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="totalOrders" fill="#8B5CF6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Tỷ lệ hoàn thành theo cửa hàng</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={operationalData?.storePerformance || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="storeName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis tickFormatter={(value) => `${value}%`} />
+                  <Tooltip
+                    formatter={(value) => [`${value}%`, 'Tỷ lệ hoàn thành']}
+                  />
+                  <Bar dataKey="completionRate" fill="#10B981" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Decal Consumption Analysis */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Số lượng decal tiêu thụ theo loại
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Số lượng đơn hàng theo loại decal</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={operationalData?.serviceConsumption || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="serviceName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#F59E0B" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Doanh thu theo loại decal</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={operationalData?.serviceConsumption || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="serviceName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis tickFormatter={(value) => exportUtils.formatCurrency(value)} />
+                  <Tooltip
+                    formatter={(value) => [exportUtils.formatCurrency(value), 'Doanh thu']}
+                  />
+                  <Bar dataKey="revenue" fill="#EF4444" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Store Performance Table */}
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Chi tiết hiệu suất cửa hàng
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Cửa hàng
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tổng đơn hàng
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Đơn hoàn thành
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tỷ lệ hoàn thành
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Doanh thu
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Đánh giá
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {operationalData?.storePerformance?.map((store) => (
+                  <tr key={store.storeID} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {store.storeName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {store.storeID}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {store.totalOrders}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {store.completedOrders}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                          <div
+                            className="bg-green-600 h-2 rounded-full"
+                            style={{ width: `${store.completionRate}%` }}
+                          ></div>
+                        </div>
+                        <span>{exportUtils.formatPercentage(store.completionRate)}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {exportUtils.formatCurrency(store.totalRevenue)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        {store.completionRate >= 90 ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : store.completionRate >= 75 ? (
+                          <TrendingUp className="w-5 h-5 text-blue-500" />
+                        ) : (
+                          <AlertCircle className="w-5 h-5 text-yellow-500" />
+                        )}
+                        <span className="ml-1">
+                          {store.completionRate >= 90 ? 'Xuất sắc' :
+                            store.completionRate >= 75 ? 'Tốt' : 'Cần cải thiện'}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -823,7 +977,7 @@ const OperationalReports = () => {
 
             {operationalData?.totalEmployees > 0 &&
               operationalData.activeEmployees / operationalData.totalEmployees <
-                0.8 && (
+              0.8 && (
                 <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <Users className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
                   <div>

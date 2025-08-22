@@ -17,11 +17,11 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  ShoppingCart, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ShoppingCart,
   Calendar,
   Download,
   Mail,
@@ -38,15 +38,15 @@ const SalesAnalytics = () => {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
     endDate: new Date().toISOString().split('T')[0] // today
   });
-  
+
   const [selectedMetric, setSelectedMetric] = useState('revenue');
 
   // Fetch sales analytics data
-  const { 
-    data: salesData, 
-    isLoading, 
-    error, 
-    refetch 
+  const {
+    data: salesData,
+    isLoading,
+    error,
+    refetch
   } = useQuery({
     queryKey: ['salesAnalytics', dateRange],
     queryFn: () => analyticsService.getSalesAnalytics(dateRange),
@@ -85,7 +85,7 @@ const SalesAnalytics = () => {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     const content = document.getElementById('sales-analytics-container');
-    
+
     printWindow.document.write(`
       <html>
         <head>
@@ -106,7 +106,7 @@ const SalesAnalytics = () => {
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
     printWindow.print();
   };
@@ -119,7 +119,7 @@ const SalesAnalytics = () => {
         body: `Báo cáo phân tích bán hàng từ ${dateRange.startDate} đến ${dateRange.endDate}`,
         attachments: ['sales-analytics.pdf']
       };
-      
+
       await exportUtils.sendEmailNotification(emailData);
       toast.success('Gửi email thành công!');
     } catch (error) {
@@ -141,7 +141,7 @@ const SalesAnalytics = () => {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <h3 className="text-red-800 font-medium">Lỗi tải dữ liệu</h3>
         <p className="text-red-600 text-sm mt-1">{error.message}</p>
-        <button 
+        <button
           onClick={() => refetch()}
           className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
@@ -159,7 +159,7 @@ const SalesAnalytics = () => {
           <h1 className="text-2xl font-bold text-gray-900">Phân tích Bán hàng</h1>
           <p className="text-gray-600 mt-1">Theo dõi xu hướng và dự báo doanh số</p>
         </div>
-        
+
         {/* Export buttons */}
         <div className="flex flex-wrap gap-2">
           <button
@@ -294,45 +294,43 @@ const SalesAnalytics = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedMetric('revenue')}
-                className={`px-3 py-1 rounded text-sm ${
-                  selectedMetric === 'revenue' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                className={`px-3 py-1 rounded text-sm ${selectedMetric === 'revenue'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
               >
                 Doanh thu
               </button>
               <button
                 onClick={() => setSelectedMetric('orders')}
-                className={`px-3 py-1 rounded text-sm ${
-                  selectedMetric === 'orders' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                className={`px-3 py-1 rounded text-sm ${selectedMetric === 'orders'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
               >
                 Số đơn
               </button>
             </div>
           </div>
-          
+
           <ResponsiveContainer width="100%" height={400}>
             <AreaChart data={salesData?.salesByDate || []}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
+              <XAxis
+                dataKey="date"
                 tickFormatter={(value) => new Date(value).toLocaleDateString('vi-VN')}
               />
-              <YAxis 
-                tickFormatter={(value) => 
-                  selectedMetric === 'revenue' 
+              <YAxis
+                tickFormatter={(value) =>
+                  selectedMetric === 'revenue'
                     ? exportUtils.formatCurrency(value)
                     : value
                 }
               />
-              <Tooltip 
+              <Tooltip
                 labelFormatter={(value) => new Date(value).toLocaleDateString('vi-VN')}
                 formatter={(value) => [
-                  selectedMetric === 'revenue' 
+                  selectedMetric === 'revenue'
                     ? exportUtils.formatCurrency(value)
                     : value,
                   selectedMetric === 'revenue' ? 'Doanh thu' : 'Số đơn'
@@ -386,12 +384,117 @@ const SalesAnalytics = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="status" />
                 <YAxis tickFormatter={(value) => exportUtils.formatCurrency(value)} />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => [exportUtils.formatCurrency(value), 'Doanh thu']}
                 />
                 <Bar dataKey="revenue" fill="#3B82F6" />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Service Analysis */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Thống kê doanh thu theo loại dịch vụ decal
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Số lượng đơn hàng theo dịch vụ</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={salesData?.salesByService || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="serviceName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#10B981" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Doanh thu theo dịch vụ</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={salesData?.salesByService || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="serviceName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis tickFormatter={(value) => exportUtils.formatCurrency(value)} />
+                  <Tooltip
+                    formatter={(value) => [exportUtils.formatCurrency(value), 'Doanh thu']}
+                  />
+                  <Bar dataKey="revenue" fill="#F59E0B" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Store Comparison */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            So sánh doanh thu giữa các cửa hàng
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Số đơn hàng theo cửa hàng</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={salesData?.salesByStore || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="storeName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#8B5CF6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Doanh thu theo cửa hàng</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={salesData?.salesByStore || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="storeName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis tickFormatter={(value) => exportUtils.formatCurrency(value)} />
+                  <Tooltip
+                    formatter={(value) => [exportUtils.formatCurrency(value), 'Doanh thu']}
+                  />
+                  <Bar dataKey="revenue" fill="#EF4444" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Employee Performance */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Hiệu suất nhân viên sale
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Số đơn hàng theo nhân viên</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={salesData?.salesByEmployee || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="employeeName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#06B6D4" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Doanh thu theo nhân viên</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={salesData?.salesByEmployee || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="employeeName" angle={-45} textAnchor="end" height={80} />
+                  <YAxis tickFormatter={(value) => exportUtils.formatCurrency(value)} />
+                  <Tooltip
+                    formatter={(value) => [exportUtils.formatCurrency(value), 'Doanh thu']}
+                  />
+                  <Bar dataKey="revenue" fill="#84CC16" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
@@ -411,6 +514,26 @@ const SalesAnalytics = () => {
                   Dự kiến tăng trưởng 15% dựa trên xu hướng hiện tại
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* Insights */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h4 className="font-medium text-green-900 mb-2">Dịch vụ bán chạy nhất</h4>
+              {salesData?.salesByService?.length > 0 && (
+                <p className="text-green-700">
+                  {salesData.salesByService[0]?.serviceName} - {salesData.salesByService[0]?.count} đơn hàng
+                </p>
+              )}
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h4 className="font-medium text-purple-900 mb-2">Cửa hàng hiệu quả nhất</h4>
+              {salesData?.salesByStore?.length > 0 && (
+                <p className="text-purple-700">
+                  {salesData.salesByStore[0]?.storeName} - {exportUtils.formatCurrency(salesData.salesByStore[0]?.revenue)}
+                </p>
+              )}
             </div>
           </div>
         </div>
