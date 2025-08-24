@@ -310,13 +310,19 @@ class ApiService {
     };
 
     // ==================== UTILITY METHODS ====================
-    testConnection: () => apiClient.get('/swagger/v1/swagger.json'),
+    testConnection() {
+        return apiClient.get('/swagger/v1/swagger.json');
+    }
 
     // Helper method để lấy base URL
-    getBaseURL: () => API_BASE_URL,
+    getBaseURL() {
+        return API_BASE_URL;
+    }
 
     // Helper method để tạo full URL
-    getFullURL: (endpoint) => `${API_BASE_URL}${endpoint}`,
+    getFullURL(endpoint) {
+        return `${API_BASE_URL}${endpoint}`;
+    }
 }
 
 // Export singleton instance
