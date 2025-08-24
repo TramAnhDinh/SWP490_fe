@@ -1,7 +1,4 @@
-import axios from 'axios';
-import { API_ENDPOINTS } from '../../constants/api';
-
-const API_BASE_URL = 'https://decalxeapi-production.up.railway.app/api';
+import apiService from '../apiService';
 
 class AnalyticsService {
   // Sales Analytics APIs
@@ -14,19 +11,19 @@ class AnalyticsService {
       if (endDate) params.append('endDate', endDate);
 
       // Lấy dữ liệu đơn hàng
-      const ordersResponse = await axios.get(`${API_BASE_URL}/orders?${params}`);
+      const ordersResponse = await apiService.orders.getAll(params);
       const orders = ordersResponse.data;
 
       // Lấy dữ liệu dịch vụ decal
-      const servicesResponse = await axios.get(`${API_BASE_URL}/decalservices`);
+      const servicesResponse = await apiService.decalServices.getAll();
       const services = servicesResponse.data;
 
       // Lấy dữ liệu cửa hàng
-      const storesResponse = await axios.get(`${API_BASE_URL}/stores`);
+      const storesResponse = await apiService.stores.getAll();
       const stores = storesResponse.data;
 
       // Lấy dữ liệu nhân viên
-      const employeesResponse = await axios.get(`${API_BASE_URL}/employees`);
+      const employeesResponse = await apiService.employees.getAll();
       const employees = employeesResponse.data;
 
       // Calculate sales metrics
@@ -69,10 +66,10 @@ class AnalyticsService {
   // Employee Performance Analytics
   async getEmployeePerformance(employeeId = null) {
     try {
-      const employeesResponse = await axios.get(`${API_BASE_URL}/employees`);
+      const employeesResponse = await apiService.employees.getAll();
       const employees = employeesResponse.data;
 
-      const ordersResponse = await axios.get(`${API_BASE_URL}/orders`);
+      const ordersResponse = await apiService.orders.getAll();
       const orders = ordersResponse.data;
 
       const performanceData = employees.map(employee => {
@@ -125,13 +122,13 @@ class AnalyticsService {
   // Customer Insights Analytics
   async getCustomerInsights() {
     try {
-      const customersResponse = await axios.get(`${API_BASE_URL}/customers`);
+      const customersResponse = await apiService.customers.getAll();
       const customers = customersResponse.data;
 
-      const ordersResponse = await axios.get(`${API_BASE_URL}/orders`);
+      const ordersResponse = await apiService.orders.getAll();
       const orders = ordersResponse.data;
 
-      const customerVehiclesResponse = await axios.get(`${API_BASE_URL}/customervehicles`);
+      const customerVehiclesResponse = await apiService.customerVehicles.getAll();
       const customerVehicles = customerVehiclesResponse.data;
 
       const customerInsights = customers.map(customer => {
@@ -184,16 +181,16 @@ class AnalyticsService {
   // Operational Reports
   async getOperationalMetrics() {
     try {
-      const ordersResponse = await axios.get(`${API_BASE_URL}/orders`);
+      const ordersResponse = await apiService.orders.getAll();
       const orders = ordersResponse.data;
 
-      const employeesResponse = await axios.get(`${API_BASE_URL}/employees`);
+      const employeesResponse = await apiService.employees.getAll();
       const employees = employeesResponse.data;
 
-      const storesResponse = await axios.get(`${API_BASE_URL}/stores`);
+      const storesResponse = await apiService.stores.getAll();
       const stores = storesResponse.data;
 
-      const servicesResponse = await axios.get(`${API_BASE_URL}/decalservices`);
+      const servicesResponse = await apiService.decalServices.getAll();
       const services = servicesResponse.data;
 
       // Order processing times

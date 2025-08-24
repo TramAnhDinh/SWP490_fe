@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'https://decalxeapi-production.up.railway.app/api';
+export const API_BASE_URL = 'https://decalxesequences-production.up.railway.app/api';
 
 export const API_ENDPOINTS = {
   // Authentication
