@@ -576,41 +576,6 @@ const OrderDetailPage = () => {
               </div>
             </Card.Content>
           </Card>
-
-          {/* Status Change */}
-          <Card>
-            <Card.Header>
-              <Card.Title>Thay đổi trạng thái</Card.Title>
-            </Card.Header>
-            <Card.Content>
-              <div className="space-y-3">
-                {["New", "In Progress", "Completed", "Cancelled"].map(
-                  (status) => (
-                    <Button
-                      key={status}
-                      variant={
-                        order.orderStatus === status ? "default" : "outline"
-                      }
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => handleStatusChange(status)}
-                      disabled={
-                        updateStatusMutation.isPending ||
-                        order.orderStatus === status
-                      }>
-                      <Badge
-                        variant={getStatusColor(status)}
-                        size="sm"
-                        className="mr-2">
-                        {status}
-                      </Badge>
-                      {status}
-                    </Button>
-                  )
-                )}
-              </div>
-            </Card.Content>
-          </Card>
         </div>
       </div>
     </div>

@@ -39,7 +39,7 @@ import UserProfilePage from "./pages/settings/UserProfilePage";
 
 // Detail Pages
 import EmployeeDetailPage from "./pages/employees/EmployeeDetailPage";
-import TemplateLibraryPage from "./pages/templates/TemplateLibraryPage";
+import TemplateLibraryPage from "./pages/decal-templates/TemplateLibraryPage";
 
 import CustomerListPage from "./pages/CustomerListPage";
 import CustomerCreatePage from "./pages/CustomerCreatePage";
@@ -59,14 +59,14 @@ import ModelDetailPage from "./pages/vehicles/ModelDetailPage";
 // Design & Template Module Pages
 import DesignGalleryPage from "./pages/designs/DesignGalleryPage";
 import DesignApprovalPage from "./pages/designs/DesignApprovalPage";
-import DesignEditorPage from "./pages/designs/DesignEditorPage";
-import DesignTestPage from "./pages/designs/DesignTestPage";
+import DesignerDashboardPage from "./pages/designs/DesignerDashboardPage";
 
 // Employee Management Module Pages
 import EmployeeListPage from "./pages/employees/EmployeeListPage";
 import AddEmployeePage from "./pages/employees/AddEmployeePage";
 import EmployeeEditPage from "./pages/employees/EmployeeEditPage";
 import PerformanceTrackingPage from "./pages/employees/PerformanceTrackingPage";
+import ManagerDashboardPage from "./pages/employees/ManagerDashboardPage";
 
 // Store Management Module Pages
 import StoreListPage from "./pages/stores/StoreListPage";
@@ -79,13 +79,29 @@ import AccountListPage from "./pages/accounts/AccountListPage";
 import AddAccountPage from "./pages/accounts/AddAccountPage";
 import AccountEditPage from "./pages/accounts/AccountEditPage";
 
+// Admin Module Pages
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminUserManagementPage from "./pages/admin/AdminUserManagementPage";
+import AdminReportsPage from "./pages/admin/AdminReportsPage";
+
 // Services & Inventory Module Pages
 import ServiceListPage from "./pages/services/ServiceListPage";
-import ServiceManagementPage from "./pages/services/ServiceManagementPage";
 import ServiceDetailPage from "./pages/services/ServiceDetailPage";
+import ServiceEditPage from "./pages/services/ServiceEditPage";
 import InventoryTrackingPage from "./pages/services/InventoryTrackingPage";
 import PricingManagementPage from "./pages/services/PricingManagementPage";
-import DecalTypesPage from "./pages/services/DecalTypesPage";
+// Decal Management Module Pages
+import DecalTypeListPage from "./pages/decal-types/DecalTypeListPage";
+import AddDecalTypePage from "./pages/decal-types/AddDecalTypePage";
+import EditDecalTypePage from "./pages/decal-types/EditDecalTypePage";
+import DecalTypeDetailPage from "./pages/decal-types/DecalTypeDetailPage";
+import AddDecalTemplatePage from "./pages/decal-templates/AddDecalTemplatePage";
+import EditDecalTemplatePage from "./pages/decal-templates/EditDecalTemplatePage";
+import DecalTemplateDetailPage from "./pages/decal-templates/DecalTemplateDetailPage";
+import DecalServiceListPage from "./pages/decal-services/DecalServiceListPage";
+import AddDecalServicePage from "./pages/decal-services/AddDecalServicePage";
+import EditDecalServicePage from "./pages/decal-services/EditDecalServicePage";
+import DecalServiceDetailPage from "./pages/decal-services/DecalServiceDetailPage";
 
 // Payment & Financial Module Pages
 import PaymentProcessingPage from "./pages/payments/PaymentProcessingPage";
@@ -99,11 +115,6 @@ import FeedbackSystemPage from "./pages/warranty/FeedbackSystemPage";
 import SupportTicketPage from "./pages/warranty/SupportTicketPage";
 
 // Analytics & Reporting Module Pages
-import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
-import SalesAnalyticsPage from "./pages/SalesAnalyticsPage";
-import PerformanceAnalyticsPage from "./pages/PerformanceAnalyticsPage";
-import CustomerAnalyticsPage from "./pages/CustomerAnalyticsPage";
-import OperationalAnalyticsPage from "./pages/OperationalAnalyticsPage";
 
 // Auth hook
 import { useAuth } from "./hooks/useAuth";
@@ -234,8 +245,7 @@ function App() {
                 {/* Design & Template Module Routes */}
                 <Route path="designs" element={<DesignGalleryPage />} />
                 <Route path="designs/approval" element={<DesignApprovalPage />} />
-                <Route path="designs/editor" element={<DesignEditorPage />} />
-                <Route path="designs/test" element={<DesignTestPage />} />
+                <Route path="designer-dashboard" element={<DesignerDashboardPage />} />
                 <Route
                   path="templates"
                   element={
@@ -252,6 +262,7 @@ function App() {
                 <Route path="employees/:id/edit" element={<EmployeeEditPage />} />
                 <Route path="employees/add" element={<AddEmployeePage />} />
                 <Route path="performance" element={<PerformanceTrackingPage />} />
+                <Route path="manager-dashboard" element={<ManagerDashboardPage />} />
 
                 {/* Store Management Module Routes */}
                 <Route path="stores" element={<StoreListPage />} />
@@ -265,21 +276,25 @@ function App() {
                 <Route path="accounts/:accountId/edit" element={<AccountEditPage />} />
 
                 {/* Services & Inventory Module Routes */}
-                <Route path="services" element={<ServiceManagementPage />} />
-                <Route path="services/list" element={<ServiceListPage />} />
-                <Route path="services/:id" element={<ServiceDetailPage />} />
-                <Route
-                  path="services/:id/edit"
-                  element={
-                    <div className="p-8">
-                      <h1 className="text-2xl font-bold">Chỉnh sửa Dịch vụ</h1>
-                      <p>Trang này sẽ được hoàn thiện sau</p>
-                    </div>
-                  }
-                />
-                <Route path="decal-types" element={<DecalTypesPage />} />
+                <Route path="admin/services" element={<ServiceListPage />} />
+                <Route path="admin/services/:id" element={<ServiceDetailPage />} />
+                <Route path="admin/services/:id/edit" element={<ServiceEditPage />} />
                 <Route path="pricing" element={<PricingManagementPage />} />
                 <Route path="inventory" element={<InventoryTrackingPage />} />
+
+                {/* Decal Management Module Routes */}
+                <Route path="decal-types" element={<DecalTypeListPage />} />
+                <Route path="decal-types/add" element={<AddDecalTypePage />} />
+                <Route path="decal-types/:id" element={<DecalTypeDetailPage />} />
+                <Route path="decal-types/edit/:id" element={<EditDecalTypePage />} />
+                <Route path="decal-templates" element={<TemplateLibraryPage />} />
+                <Route path="decal-templates/add" element={<AddDecalTemplatePage />} />
+                <Route path="decal-templates/:id" element={<DecalTemplateDetailPage />} />
+                <Route path="decal-templates/edit/:id" element={<EditDecalTemplatePage />} />
+                <Route path="decal-services" element={<DecalServiceListPage />} />
+                <Route path="decal-services/add" element={<AddDecalServicePage />} />
+                <Route path="decal-services/edit/:id" element={<EditDecalServicePage />} />
+                <Route path="decal-services/:id" element={<DecalServiceDetailPage />} />
 
                 {/* Payment & Financial Module Routes */}
                 <Route path="payments" element={<PaymentProcessingPage />} />
@@ -311,35 +326,8 @@ function App() {
                 <Route path="support/tickets" element={<SupportTicketPage />} />
 
                 {/* Analytics & Reporting Module Routes */}
-                <Route path="analytics" element={<AnalyticsDashboardPage />} />
-                <Route
-                  path="analytics/dashboard"
-                  element={<AnalyticsDashboardPage />}
-                />
-                <Route path="analytics/sales" element={<SalesAnalyticsPage />} />
-                <Route
-                  path="analytics/performance"
-                  element={<PerformanceAnalyticsPage />}
-                />
-                <Route
-                  path="analytics/customers"
-                  element={<CustomerAnalyticsPage />}
-                />
-                <Route
-                  path="analytics/operations"
-                  element={<OperationalAnalyticsPage />}
-                />
-                <Route path="reports" element={<AnalyticsDashboardPage />} />
-                <Route path="reports/sales" element={<SalesAnalyticsPage />} />
-                <Route
-                  path="reports/performance"
-                  element={<PerformanceAnalyticsPage />}
-                />
-                <Route path="reports/customers" element={<CustomerAnalyticsPage />} />
-                <Route
-                  path="reports/operations"
-                  element={<OperationalAnalyticsPage />}
-                />
+                <Route path="analytics" element={<AdminReportsPage />} />
+                <Route path="reports" element={<AdminReportsPage />} />
 
                 {/* Placeholder routes - will be implemented in next phases */}
                 <Route
@@ -354,6 +342,13 @@ function App() {
                 {/* Settings Routes */}
                 <Route path="settings/system" element={<SystemSettingsPage />} />
                 <Route path="settings/profile" element={<UserProfilePage />} />
+
+                {/* Admin Routes */}
+                <Route path="admin" element={<AdminDashboardPage />} />
+                <Route path="admin/dashboard" element={<AdminDashboardPage />} />
+                <Route path="admin/users" element={<AdminUserManagementPage />} />
+                <Route path="admin/reports" element={<AdminReportsPage />} />
+                <Route path="admin/stores" element={<StoreListPage />} />
               </Route>
 
               {/* Catch all route */}

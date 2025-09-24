@@ -11,27 +11,44 @@ import {
   Building,
   MapPin,
   Users,
-  Download
+  Download,
+  Filter,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  BarChart3,
+  Store
 } from 'lucide-react';
+import { Card, Button, Badge, LoadingSpinner, Input, Modal } from '../../components/common';
 import { storeService } from '../../services/storeService';
 import { employeeService } from '../../services/employeeService';
 
 const StoreListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [selectedStores, setSelectedStores] = useState([]);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [showStoreModal, setShowStoreModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [storeToDelete, setStoreToDelete] = useState(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Get stores data
   const { data: stores = [], isLoading, error } = useQuery({
-    queryKey: ['stores'],
-    queryFn: storeService.getStores,
+    queryKey: ['admin-stores'],
+    queryFn: () => storeService.getStores(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Get employees data để đếm nhân viên
   const { data: employees = [] } = useQuery({
-    queryKey: ['employees'],
+    queryKey: ['admin-employees'],
     queryFn: () => employeeService.getEmployees(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Delete store mutation
@@ -39,16 +56,32 @@ const StoreListPage = () => {
     mutationFn: storeService.deleteStore,
     onSuccess: () => {
       toast.success('Cửa hàng đã được xóa thành công!');
-      queryClient.invalidateQueries(['stores']);
+      queryClient.invalidateQueries(['admin-stores']);
+      setShowDeleteModal(false);
+      setStoreToDelete(null);
     },
     onError: (error) => {
-      toast.error('Lỗi khi xóa cửa hàng: ' + (error.response?.data?.message || error.message));
+      console.error('Delete store error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra khi xóa cửa hàng';
+      toast.error('Lỗi khi xóa cửa hàng: ' + errorMessage);
     },
   });
 
   const handleDelete = (storeId, storeName) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa cửa hàng "${storeName}"? Hành động này không thể hoàn tác.`)) {
-      deleteMutation.mutate(storeId);
+    // Kiểm tra xem cửa hàng có nhân viên không
+    const employeeCount = getEmployeeCount(storeId);
+    if (employeeCount > 0) {
+      toast.error(`Không thể xóa cửa hàng "${storeName}" vì còn ${employeeCount} nhân viên đang làm việc. Vui lòng chuyển nhân viên sang cửa hàng khác trước khi xóa.`);
+      return;
+    }
+
+    setStoreToDelete({ id: storeId, name: storeName });
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (storeToDelete) {
+      deleteMutation.mutate(storeToDelete.id);
     }
   };
 
@@ -70,14 +103,17 @@ const StoreListPage = () => {
     }
   };
 
-  // Lọc stores theo search
+  // Lọc stores theo search và status
   const filteredStores = stores.filter(store => {
     const matchesSearch = searchTerm === '' ||
       store.storeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       store.storeID?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       store.address?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesSearch;
+    const matchesStatus = filterStatus === '' ||
+      store.status?.toLowerCase() === filterStatus.toLowerCase();
+
+    return matchesSearch && matchesStatus;
   });
 
   // Đếm nhân viên cho mỗi store
@@ -85,12 +121,12 @@ const StoreListPage = () => {
     return employees.filter(emp => emp.storeID === storeId).length;
   };
 
+  const formatNumber = (number) => {
+    return new Intl.NumberFormat('vi-VN').format(number);
+  };
+
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Đang tải...</div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
@@ -106,95 +142,86 @@ const StoreListPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý Cửa hàng</h1>
-          <p className="text-gray-600">Quản lý thông tin và hoạt động của các cửa hàng</p>
+          <h1 className="text-2xl font-bold text-gray-900">Quản lý chuỗi cửa hàng</h1>
+          <p className="text-gray-600">Quản lý và giám sát tất cả cửa hàng trong hệ thống</p>
+        </div>
+
+        <Button
+          onClick={() => navigate('/stores/add')}
+          className="flex items-center space-x-2"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Thêm cửa hàng mới</span>
+        </Button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Tổng cửa hàng</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stores.length}
+              </p>
+            </div>
+            <Store className="h-8 w-8 text-blue-600" />
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Tổng nhân viên</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {employees.length}
+              </p>
+            </div>
+            <Users className="h-8 w-8 text-purple-600" />
+          </div>
+        </Card>
+
+      </div>
+
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <Input
+            type="text"
+            placeholder="Tìm kiếm cửa hàng..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+            icon={<Search className="h-4 w-4" />}
+          />
         </div>
         <div className="flex gap-2">
-          <button
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="Active">Hoạt động</option>
+            <option value="Inactive">Tạm dừng</option>
+          </select>
+          <Button
             onClick={() => handleBulkAction('export')}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            variant="outline"
+            className="flex items-center space-x-2"
           >
-            <Download className="w-4 h-4" />
-            Xuất Excel
-          </button>
-          <Link
-            to="/stores/add"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Thêm cửa hàng
-          </Link>
+            <Download className="h-4 w-4" />
+            <span>Xuất Excel</span>
+          </Button>
         </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Building className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Tổng cửa hàng</p>
-              <p className="text-xl font-semibold">{stores.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Tổng nhân viên</p>
-              <p className="text-xl font-semibold">{employees.length}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="bg-white p-4 rounded-lg border shadow-sm">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm theo tên, mã số, địa chỉ..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-        </div>
-
-        {/* Bulk Actions */}
-        {selectedStores.length > 0 && (
-          <div className="mt-4 flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-            <span className="text-sm text-blue-700">
-              Đã chọn {selectedStores.length} cửa hàng
-            </span>
-            <div className="flex gap-2 ml-auto">
-              <button
-                onClick={() => handleBulkAction('delete')}
-                className="px-3 py-1 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50"
-              >
-                Xóa
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Store Table */}
-      <div className="bg-white rounded-lg border shadow-sm">
+      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead>
-              <tr className="border-b">
+            <thead className="bg-gray-50">
+              <tr>
                 <th className="text-left p-4">
                   <input
                     type="checkbox"
@@ -209,10 +236,10 @@ const StoreListPage = () => {
                     className="rounded border-gray-300"
                   />
                 </th>
-                <th className="text-left p-4">Cửa hàng</th>
-                <th className="text-left p-4">Địa chỉ</th>
-                <th className="text-left p-4">Nhân viên</th>
-                <th className="text-left p-4">Thao tác</th>
+                <th className="text-left p-4 font-medium text-gray-900">Cửa hàng</th>
+                <th className="text-left p-4 font-medium text-gray-900">Địa chỉ</th>
+                <th className="text-left p-4 font-medium text-gray-900">Nhân viên</th>
+                <th className="text-left p-4 font-medium text-gray-900">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -244,11 +271,9 @@ const StoreListPage = () => {
                     </div>
                   </td>
                   <td className="p-4">
-                    <div className="text-sm">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-gray-400" />
-                        <span>{store.address || 'Chưa có địa chỉ'}</span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">{store.address}</span>
                     </div>
                   </td>
                   <td className="p-4">
@@ -257,7 +282,6 @@ const StoreListPage = () => {
                       <span className="text-sm font-medium">{getEmployeeCount(store.storeID)} nhân viên</span>
                     </div>
                   </td>
-
                   <td className="p-4">
                     <div className="flex gap-2">
                       <button
@@ -293,6 +317,35 @@ const StoreListPage = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Xác nhận xóa cửa hàng"
+      >
+        <div className="space-y-4">
+          <p>
+            Bạn có chắc chắn muốn xóa cửa hàng "{storeToDelete?.name}"?
+            Hành động này không thể hoàn tác.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteModal(false)}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="danger"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Đang xóa...' : 'Xóa'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -36,6 +36,9 @@ export const authService = {
       localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+
+      // Clear session storage as well
+      sessionStorage.clear();
     }
   },
 
@@ -132,5 +135,26 @@ export const authService = {
     if (!userRole) return [];
 
     return getAvailableActions(userRole, module);
+  },
+
+  // Clear all storage data
+  clearAllStorage: () => {
+    // Clear localStorage
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+
+    // Clear sessionStorage
+    sessionStorage.clear();
+
+    // Clear any other storage keys that might exist
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.includes('token') || key.includes('user') || key.includes('auth'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
   },
 };

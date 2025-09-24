@@ -78,9 +78,9 @@ const ServicesPage = () => {
     const transformedServices = services.map(service => ({
         id: service.serviceID,
         title: service.serviceName,
-        category: service.decalType?.decalTypeName || 'Khác',
+        category: service.decalTemplateName || service.decalTypeName || 'Khác',
         description: service.description || 'Dịch vụ dán decal chuyên nghiệp',
-        icon: getServiceIcon(service.decalType?.decalTypeName),
+        icon: getServiceIcon(service.decalTemplateName || service.decalTypeName),
         features: [
             'Chất lượng cao',
             'Thời gian nhanh chóng',
@@ -91,7 +91,7 @@ const ServicesPage = () => {
         priceRange: service.price ? `${service.price.toLocaleString('vi-VN')}đ` : 'Theo báo giá',
         duration: '1-3 ngày',
         warranty: '12 tháng',
-        color: getServiceColor(service.decalType?.decalTypeName),
+        color: getServiceColor(service.decalTemplateName || service.decalTypeName),
         popular: service.price && service.price > 500000 // Services over 500k are considered popular
     }));
 

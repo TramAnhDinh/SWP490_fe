@@ -1,73 +1,157 @@
 import apiClient from './apiClient';
 import { API_ENDPOINTS } from '../constants/api';
 
+// Mock data for development
+const mockAccounts = [
+    {
+        id: 1,
+        username: 'admin',
+        email: 'admin@decalxe.com',
+        fullName: 'System Administrator',
+        role: 'Admin',
+        status: 'Active',
+        lastLogin: '2024-01-15T10:30:00Z',
+        createdAt: '2024-01-01T00:00:00Z'
+    },
+    {
+        id: 2,
+        username: 'manager1',
+        email: 'manager1@decalxe.com',
+        fullName: 'Nguyễn Văn A',
+        role: 'Store Manager',
+        status: 'Active',
+        lastLogin: '2024-01-15T09:15:00Z',
+        createdAt: '2024-01-02T00:00:00Z'
+    },
+    {
+        id: 3,
+        username: 'designer1',
+        email: 'designer1@decalxe.com',
+        fullName: 'Trần Thị B',
+        role: 'Designer',
+        status: 'Active',
+        lastLogin: '2024-01-15T08:45:00Z',
+        createdAt: '2024-01-03T00:00:00Z'
+    }
+];
+
 export const accountService = {
     // Get all accounts
-    getAccounts: async () => {
-        const response = await apiClient.get(API_ENDPOINTS.ACCOUNTS.BASE);
-        return response.data;
+    getAccounts: async (params = {}) => {
+        try {
+            const response = await apiClient.get(API_ENDPOINTS.ACCOUNTS.GET_ALL, { params });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching accounts:', error);
+            // Return mock data for development
+            return mockAccounts;
+        }
     },
 
     // Get account by ID
     getAccountById: async (id) => {
-        const response = await apiClient.get(API_ENDPOINTS.ACCOUNTS.BY_ID(id));
-        return response.data;
+        try {
+            const response = await apiClient.get(`${API_ENDPOINTS.ACCOUNTS.GET_BY_ID}/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching account:', error);
+            // Return mock data for development
+            return mockAccounts.find(acc => acc.id === id);
+        }
     },
 
     // Create new account
     createAccount: async (accountData) => {
-        const response = await apiClient.post(API_ENDPOINTS.ACCOUNTS.BASE, accountData);
-        return response.data;
+        try {
+            const response = await apiClient.post(API_ENDPOINTS.ACCOUNTS.CREATE, accountData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating account:', error);
+            throw error;
+        }
     },
 
     // Update account
     updateAccount: async (id, accountData) => {
-        const response = await apiClient.put(API_ENDPOINTS.ACCOUNTS.BY_ID(id), accountData);
-        return response.data;
+        try {
+            const response = await apiClient.put(`${API_ENDPOINTS.ACCOUNTS.UPDATE}/${id}`, accountData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating account:', error);
+            throw error;
+        }
     },
 
     // Delete account
     deleteAccount: async (id) => {
-        const response = await apiClient.delete(API_ENDPOINTS.ACCOUNTS.BY_ID(id));
-        return response.data;
-    },
-
-    // Update account status
-    updateAccountStatus: async ({ id, isActive }) => {
-        const response = await apiClient.patch(`${API_ENDPOINTS.ACCOUNTS.BY_ID(id)}/status`, { isActive });
-        return response.data;
-    },
-
-    // Get all roles
-    getRoles: async () => {
         try {
-            const response = await apiClient.get('/roles');
+            const response = await apiClient.delete(`${API_ENDPOINTS.ACCOUNTS.DELETE}/${id}`);
             return response.data;
         } catch (error) {
-            console.warn('Roles API not available, returning default roles');
-            return [
-                { roleID: 1, roleName: 'Admin' },
-                { roleID: 2, roleName: 'Manager' },
-                { roleID: 3, roleName: 'Employee' },
-                { roleID: 4, roleName: 'Technician' },
-                { roleID: 5, roleName: 'Customer' }
-            ];
+            console.error('Error deleting account:', error);
+            throw error;
         }
     },
 
-    // Get all stores
-    getStores: async () => {
+    // Get accounts by role (filter from all accounts)
+    getAccountsByRole: async (role) => {
         try {
-            const response = await apiClient.get('/stores');
+            const response = await apiClient.get(API_ENDPOINTS.ACCOUNTS.GET_ALL);
+            const accounts = response.data;
+            return accounts.filter(acc => acc.role === role);
+        } catch (error) {
+            console.error('Error fetching accounts by role:', error);
+            // Return mock data for development
+            return mockAccounts.filter(acc => acc.role === role);
+        }
+    },
+
+    // Change account status (update account with new status)
+    changeAccountStatus: async (id, status) => {
+        try {
+            const response = await apiClient.put(API_ENDPOINTS.ACCOUNTS.UPDATE(id), {
+                isActive: status === 'Active'
+            });
             return response.data;
         } catch (error) {
-            console.warn('Stores API not available, returning default stores');
-            return [
-                { storeID: 1, storeName: 'Chi nhánh Hà Nội' },
-                { storeID: 2, storeName: 'Chi nhánh TP.HCM' },
-                { storeID: 3, storeName: 'Chi nhánh Đà Nẵng' },
-                { storeID: 4, storeName: 'Chi nhánh Cần Thơ' }
-            ];
+            console.error('Error changing account status:', error);
+            throw error;
+        }
+    },
+
+    // Reset password (not implemented in backend yet)
+    resetPassword: async (id) => {
+        try {
+            // This endpoint doesn't exist in backend yet
+            throw new Error('Reset password feature not implemented yet');
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            throw error;
+        }
+    },
+
+    // Get account permissions (not implemented in backend yet)
+    getAccountPermissions: async (id) => {
+        try {
+            // This endpoint doesn't exist in backend yet
+            // Return mock data for development
+            return {
+                canManageUsers: true,
+                canManageStores: true,
+                canViewReports: true,
+                canManageDesigns: true,
+                canManageOrders: true
+            };
+        } catch (error) {
+            console.error('Error fetching account permissions:', error);
+            // Return mock data for development
+            return {
+                canManageUsers: true,
+                canManageStores: true,
+                canViewReports: true,
+                canManageDesigns: true,
+                canManageOrders: true
+            };
         }
     }
 };

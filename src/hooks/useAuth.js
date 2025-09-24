@@ -16,30 +16,23 @@ export const useAuth = () => {
   } = useQuery({
     queryKey: ['auth', 'currentUser'],
     queryFn: () => {
-      console.log('🔍 useQuery queryFn called');
       // Return user from localStorage directly
       const currentUser = authService.getCurrentUser();
-      console.log('🔍 Current user from localStorage:', currentUser);
 
       // Check if we're on login page or if user explicitly logged out
       const isOnLoginPage = window.location.pathname === '/login';
       const hasLoggedOut = sessionStorage.getItem('hasLoggedOut') === 'true';
 
-      console.log('🔍 isOnLoginPage:', isOnLoginPage, 'hasLoggedOut:', hasLoggedOut);
-
       // If no user found and we're not on login page and haven't logged out, return null
       if (!currentUser && !isOnLoginPage && !hasLoggedOut) {
-        console.log('🔍 No user found, returning null');
         return null;
       }
 
       // Clear logout flag if we have a user
       if (currentUser) {
         sessionStorage.removeItem('hasLoggedOut');
-        console.log('🔍 Cleared logout flag');
       }
 
-      console.log('🔍 Returning user:', currentUser);
       return currentUser;
     },
     staleTime: 0, // Always refetch when needed
@@ -77,27 +70,21 @@ export const useAuth = () => {
   // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      console.log('🔄 Starting logout process...');
       try {
         // Call backend logout API if available
         await authService.logout();
-        console.log('✅ Backend logout successful');
       } catch (error) {
-        console.error('❌ Backend logout failed:', error);
+        console.error('Backend logout failed:', error);
       } finally {
-        // Clear localStorage regardless of backend call
-        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+        // Clear all storage data
+        authService.clearAllStorage();
 
         // Set logout flag to prevent auto-login
         sessionStorage.setItem('hasLoggedOut', 'true');
-        console.log('🧹 Cleared localStorage and set logout flag');
       }
       return { success: true };
     },
     onSuccess: () => {
-      console.log('🎉 Logout mutation success, clearing cache...');
       // Clear all query cache
       queryClient.setQueryData(['auth', 'currentUser'], null);
       queryClient.clear();
@@ -106,26 +93,22 @@ export const useAuth = () => {
       toast.success('Đăng xuất thành công!');
 
       // Redirect to login page
-      console.log('🔄 Redirecting to login page...');
       navigate('/login');
     },
     onError: (error) => {
-      console.error('❌ Logout error:', error);
+      console.error('Logout error:', error);
 
       // Clear data even if logout fails
       queryClient.setQueryData(['auth', 'currentUser'], null);
       queryClient.clear();
 
-      // Clear localStorage
-      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+      // Clear all storage data
+      authService.clearAllStorage();
 
       // Set logout flag to prevent auto-login
       sessionStorage.setItem('hasLoggedOut', 'true');
 
       // Redirect to login page
-      console.log('🔄 Redirecting to login page after error...');
       navigate('/login');
     },
   });

@@ -76,7 +76,7 @@ const InventoryTrackingPage = () => {
         service.serviceName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.description?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesDecalType = selectedDecalType === '' || service.decalTypeID === selectedDecalType;
+      const matchesDecalType = selectedDecalType === '' || service.decalTemplateID === selectedDecalType;
       const matchesStock = !showLowStockOnly || service.stockStatus === 'low';
       
       return matchesSearch && matchesDecalType && matchesStock;

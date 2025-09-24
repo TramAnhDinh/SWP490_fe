@@ -14,7 +14,9 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { employeeService } from '../../services/employeeService';
+import { roleService } from '../../services/roleService';
 import { accountService } from '../../services/accountService';
+import { storeService } from '../../services/storeService';
 
 const AddEmployeePage = () => {
   const navigate = useNavigate();
@@ -41,13 +43,13 @@ const AddEmployeePage = () => {
   // Get roles data
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
     queryKey: ['roles'],
-    queryFn: employeeService.getRoles,
+    queryFn: () => roleService.getRoles(),
   });
 
   // Get stores data
   const { data: stores = [], isLoading: storesLoading } = useQuery({
     queryKey: ['stores'],
-    queryFn: employeeService.getStores,
+    queryFn: () => storeService.getStores(),
   });
 
   // Get current employees data để kiểm tra Manager
@@ -215,11 +217,12 @@ const AddEmployeePage = () => {
       };
 
       const createdEmployee = await createEmployeeMutation.mutateAsync(employeeData);
-      toast.success('Nhân viên đã được tạo thành công và liên kết với tài khoản!');
 
       queryClient.invalidateQueries(['employees']);
       queryClient.invalidateQueries(['accounts']);
-      navigate('/employees');
+
+      toast.success('Nhân viên đã được tạo thành công!');
+      navigate(-1);
 
     } catch (error) {
       // Error đã được xử lý trong onError của mutation

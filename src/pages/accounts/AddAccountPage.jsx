@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { accountService } from '../../services/accountService';
 import { employeeService } from '../../services/employeeService';
+import { roleService } from '../../services/roleService';
 
 const AddAccountPage = () => {
     const navigate = useNavigate();
@@ -30,7 +31,7 @@ const AddAccountPage = () => {
     // Get roles data
     const { data: roles = [], isLoading: rolesLoading } = useQuery({
         queryKey: ['roles'],
-        queryFn: employeeService.getRoles,
+        queryFn: () => roleService.getRoles(),
     });
 
     // Create account mutation

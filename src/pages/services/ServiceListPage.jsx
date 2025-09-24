@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
-  Eye, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Edit,
+  Trash2,
+  Eye,
   DollarSign,
   Package,
   Settings,
@@ -123,7 +123,7 @@ const ServiceListPage = () => {
       return;
     }
 
-    const confirmMessage = action === 'delete' 
+    const confirmMessage = action === 'delete'
       ? `Xóa ${selectedServices.length} dịch vụ đã chọn?`
       : `Thực hiện hành động với ${selectedServices.length} dịch vụ đã chọn?`;
 
@@ -149,12 +149,12 @@ const ServiceListPage = () => {
   };
 
   const filteredServices = services.filter(service => {
-    const matchesSearch = 
+    const matchesSearch =
       service.serviceName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.decalType?.typeName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesCategory = filterCategory === 'all' || 
+    const matchesCategory = filterCategory === 'all' ||
       service.decalType?.typeName === filterCategory;
 
     return matchesSearch && matchesCategory;
@@ -174,7 +174,7 @@ const ServiceListPage = () => {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => navigate('/services/analytics')}
+            onClick={() => navigate('/admin/services/analytics')}
             className="flex items-center gap-2"
           >
             <BarChart3 className="w-4 h-4" />
@@ -374,7 +374,7 @@ const ServiceListPage = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => navigate(`/services/${service.serviceID}`)}
+                    onClick={() => navigate(`/admin/services/${service.serviceID}`)}
                     className="flex-1"
                   >
                     <Eye className="w-4 h-4 mr-1" />
@@ -383,7 +383,7 @@ const ServiceListPage = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => navigate(`/services/${service.serviceID}/edit`)}
+                    onClick={() => navigate(`/admin/services/${service.serviceID}/edit`)}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -483,14 +483,14 @@ const ServiceListPage = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/services/${service.serviceID}`)}
+                          onClick={() => navigate(`/admin/services/${service.serviceID}`)}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/services/${service.serviceID}/edit`)}
+                          onClick={() => navigate(`/admin/services/${service.serviceID}/edit`)}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -564,14 +564,14 @@ const ServiceListPage = () => {
                   required
                 />
                 <select
-                  name="decalTypeID"
+                  name="decalTemplateID"
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Chọn loại decal</option>
+                  <option value="">Chọn mẫu decal</option>
                   {decalTypes.map(type => (
                     <option key={type.decalTypeID} value={type.decalTypeID}>
-                      {type.typeName}
+                      {type.decalTypeName}
                     </option>
                   ))}
                 </select>

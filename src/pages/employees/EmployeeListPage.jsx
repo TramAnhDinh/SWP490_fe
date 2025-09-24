@@ -22,6 +22,9 @@ import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, Button, Input, LoadingSpinner, Badge } from '../../components/common';
 import { employeeService } from '../../services/employeeService';
+import { roleService } from '../../services/roleService';
+import { storeService } from '../../services/storeService';
+import { authService } from '../../services/auth';
 import { getRoleNameInVietnamese, getRoleBadgeColor } from '../../utils/roleUtils';
 
 const EmployeeListPage = () => {
@@ -33,8 +36,11 @@ const EmployeeListPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Get current user info
+  const currentUser = authService.getCurrentUser();
+
   // Get employees data
-  const { data: employees = [], isLoading, error } = useQuery({
+  const { data: allEmployees = [], isLoading, error } = useQuery({
     queryKey: ['employees', searchTerm, filterRole, filterStatus],
     queryFn: () => employeeService.getEmployees({
       search: searchTerm,
@@ -43,16 +49,69 @@ const EmployeeListPage = () => {
     }),
   });
 
+  // Filter employees based on user role
+  const employees = React.useMemo(() => {
+    if (!currentUser) {
+      console.log('No current user, showing all employees');
+      return allEmployees;
+    }
+
+    console.log('Current user:', currentUser);
+    console.log('User role:', currentUser.role);
+    console.log('User accountRoleName:', currentUser.accountRoleName);
+    console.log('User employeeID:', currentUser.employeeID);
+
+    // If user is Admin, show all employees
+    if (currentUser.role === 'Admin' || currentUser.accountRoleName === 'Admin') {
+      console.log('User is Admin, showing all employees');
+      return allEmployees;
+    }
+
+    // If user is Manager, only show employees from same store
+    if (currentUser.role === 'Manager' || currentUser.accountRoleName === 'Manager') {
+      // Find current user's storeID from employee data
+      const currentUserEmployee = allEmployees.find(emp => emp.employeeID === currentUser.employeeID);
+      const userStoreID = currentUserEmployee?.storeID;
+
+      console.log('Current user employee data:', currentUserEmployee);
+      console.log('User storeID from employee data:', userStoreID);
+      console.log('User storeID type:', typeof userStoreID);
+      console.log('All employees storeIDs:', allEmployees.map(emp => ({
+        id: emp.employeeID,
+        storeID: emp.storeID,
+        storeIDType: typeof emp.storeID
+      })));
+
+      if (!userStoreID) {
+        console.log('No storeID found for current user, showing all employees');
+        return allEmployees;
+      }
+
+      const filteredEmployees = allEmployees.filter(employee => {
+        const isMatch = employee.storeID === userStoreID;
+        console.log(`Employee ${employee.employeeID}: storeID=${employee.storeID} (${typeof employee.storeID}) === user.storeID=${userStoreID} (${typeof userStoreID}) = ${isMatch}`);
+        return isMatch;
+      });
+
+      console.log('Filtered employees:', filteredEmployees);
+      return filteredEmployees;
+    }
+
+    // For other roles, show all employees (or you can add more specific logic)
+    console.log('User has other role, showing all employees');
+    return allEmployees;
+  }, [allEmployees, currentUser]);
+
   // Get roles data
   const { data: roles = [] } = useQuery({
     queryKey: ['roles'],
-    queryFn: employeeService.getRoles,
+    queryFn: () => roleService.getRoles(),
   });
 
   // Get stores data
   const { data: stores = [] } = useQuery({
     queryKey: ['stores'],
-    queryFn: employeeService.getStores,
+    queryFn: () => storeService.getStores(),
   });
 
   // Toggle employee status mutation
@@ -76,7 +135,9 @@ const EmployeeListPage = () => {
       queryClient.invalidateQueries(['employees']);
     },
     onError: (error) => {
-      toast.error('Lỗi khi xóa nhân viên: ' + error.message);
+      console.error('Delete employee error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra khi xóa nhân viên';
+      toast.error('Lỗi khi xóa nhân viên: ' + errorMessage);
     },
   });
 
@@ -125,12 +186,8 @@ const EmployeeListPage = () => {
 
 
 
-  // Lọc bỏ Admin khỏi danh sách employees
-  const nonAdminEmployees = employees.filter(employee =>
-    !employee.roles?.some(role => role.roleName === 'Admin')
-  );
-
-  const filteredEmployees = nonAdminEmployees.filter(employee => {
+  // Apply search and filter to employees (already filtered by role/store)
+  const filteredEmployees = employees.filter(employee => {
     const matchesSearch =
       employee.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -186,7 +243,7 @@ const EmployeeListPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Tổng nhân viên</p>
-              <p className="text-xl font-semibold">{nonAdminEmployees.length}</p>
+              <p className="text-xl font-semibold">{employees.length}</p>
             </div>
           </div>
         </Card>
@@ -198,7 +255,7 @@ const EmployeeListPage = () => {
             <div>
               <p className="text-sm text-gray-600">Đang hoạt động</p>
               <p className="text-xl font-semibold">
-                {nonAdminEmployees.filter(emp => emp.isActive).length}
+                {employees.filter(emp => emp.isActive).length}
               </p>
             </div>
           </div>
@@ -211,7 +268,7 @@ const EmployeeListPage = () => {
             <div>
               <p className="text-sm text-gray-600">Tạm dừng</p>
               <p className="text-xl font-semibold">
-                {nonAdminEmployees.filter(emp => !emp.isActive).length}
+                {employees.filter(emp => !emp.isActive).length}
               </p>
             </div>
           </div>
@@ -224,7 +281,7 @@ const EmployeeListPage = () => {
             <div>
               <p className="text-sm text-gray-600">Quản lý</p>
               <p className="text-xl font-semibold">
-                {nonAdminEmployees.filter(emp =>
+                {employees.filter(emp =>
                   emp.roles?.some(role => role.roleName === 'Manager')
                 ).length}
               </p>

@@ -28,7 +28,7 @@ const ServiceDetailPage = () => {
             try {
                 await serviceService.deleteService(id);
                 toast.success('Xóa dịch vụ thành công!');
-                navigate('/services');
+                navigate(-1);
             } catch (error) {
                 console.error('Error deleting service:', error);
                 toast.error('Có lỗi xảy ra khi xóa dịch vụ');
@@ -49,7 +49,7 @@ const ServiceDetailPage = () => {
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                     <p className="text-red-500 mb-4">Không thể tải thông tin dịch vụ</p>
-                    <Button onClick={() => navigate('/services')}>
+                    <Button onClick={() => navigate(-1)}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Quay lại danh sách
                     </Button>
@@ -63,7 +63,7 @@ const ServiceDetailPage = () => {
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                     <p className="text-gray-500 mb-4">Không tìm thấy dịch vụ</p>
-                    <Button onClick={() => navigate('/services')}>
+                    <Button onClick={() => navigate(-1)}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Quay lại danh sách
                     </Button>
@@ -80,7 +80,7 @@ const ServiceDetailPage = () => {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate('/services')}
+                        onClick={() => navigate(-1)}
                         className="flex items-center space-x-2"
                     >
                         <ArrowLeft className="h-4 w-4" />
@@ -93,7 +93,7 @@ const ServiceDetailPage = () => {
                 </div>
 
                 <div className="flex space-x-3">
-                    <Link to={`/services/${id}/edit`}>
+                    <Link to={`/admin/services/${id}/edit`}>
                         <Button variant="outline">
                             <Edit className="h-4 w-4 mr-2" />
                             Chỉnh sửa
@@ -196,14 +196,14 @@ const ServiceDetailPage = () => {
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Hành động nhanh</h3>
 
                         <div className="space-y-3">
-                            <Link to={`/services/${id}/edit`}>
+                            <Link to={`/admin/services/${id}/edit`}>
                                 <Button variant="outline" className="w-full">
                                     <Edit className="h-4 w-4 mr-2" />
                                     Chỉnh sửa dịch vụ
                                 </Button>
                             </Link>
 
-                            <Link to="/services">
+                            <Link to="/admin/services">
                                 <Button className="w-full">
                                     <Package className="h-4 w-4 mr-2" />
                                     Quản lý dịch vụ
