@@ -52,15 +52,33 @@ const navigation = [
       { name: 'Danh sách cửa hàng', href: '/admin/stores' }
     ],
   },
+  // {
+  //   name: "Đơn hàng",
+  //   icon: ShoppingCart,
+  //   roles: ["Admin", "Manager", "Sales", "Technician"],
+  //   children: [
+  //     { name: "Danh sách đơn hàng", href: "/orders" },
+  //     { name: "Tạo đơn hàng mới", href: "/orders/create" },
+  //   ],
+  // },
   {
-    name: "Đơn hàng",
-    icon: ShoppingCart,
-    roles: ["Admin", "Manager", "Sales", "Technician"],
-    children: [
-      { name: "Danh sách đơn hàng", href: "/orders" },
-      { name: "Tạo đơn hàng mới", href: "/orders/create" },
-    ],
-  },
+  name: "Đơn hàng",
+  icon: ShoppingCart,
+  roles: ["Admin", "Manager", "Sales", "Technician"],
+  children: [
+    { 
+      name: "Danh sách đơn hàng", 
+      href: "/orders" 
+    },
+  ],
+},
+{
+  name: "Tạo đơn hàng mới",
+  icon: ShoppingCart,
+  roles: ["Sales", "Technician"],
+  href: "/orders/create",
+},
+
   {
     name: 'Lắp đặt',
     icon: Wrench,
