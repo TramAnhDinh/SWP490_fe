@@ -305,26 +305,7 @@ const BrandDetailPage = () => {
             </div>
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Hành động nhanh</h3>
 
-            <div className="space-y-3">
-              <Link to={`/vehicles/brands/${id}/edit`}>
-                <Button variant="outline" className="w-full">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Chỉnh sửa thương hiệu
-                </Button>
-              </Link>
-
-              <Link to="/vehicles/models/create">
-                <Button className="w-full">
-                  <Car className="h-4 w-4 mr-2" />
-                  Thêm mẫu xe
-                </Button>
-              </Link>
-            </div>
-          </Card>
         </div>
       </div>
     </div>

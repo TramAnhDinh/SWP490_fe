@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, Save, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, Upload, X, Image } from 'lucide-react';
 import { decalTemplateService } from '../../services/decalTemplateService';
 import { decalTypeService } from '../../services/decalTypeService';
+import { uploadToCloudinary } from '../../config/cloudinary';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
@@ -17,6 +18,9 @@ const EditDecalTemplatePage = () => {
     const queryClient = useQueryClient();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     const [formData, setFormData] = useState({
         templateName: '',
@@ -45,8 +49,70 @@ const EditDecalTemplatePage = () => {
                 imageURL: template.imageURL || '',
                 decalTypeID: template.decalTypeID || '',
             });
+            // Set image preview if there's existing image
+            if (template.imageURL) {
+                setImagePreview(template.imageURL);
+            }
         }
     }, [template]);
+
+    // Cloudinary upload function
+    const handleCloudinaryUpload = async (file) => {
+        return await uploadToCloudinary(file, {
+            folder: 'decal-templates',
+            tags: 'decal,template,upload'
+        });
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Vui lòng chọn file ảnh hợp lệ');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Kích thước file không được vượt quá 5MB');
+            return;
+        }
+
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+        setIsUploadingImage(true);
+
+        try {
+            const result = await handleCloudinaryUpload(file);
+            if (result.success) {
+                setFormData(prev => ({
+                    ...prev,
+                    imageURL: result.url
+                }));
+                toast.success('Tải ảnh lên thành công!');
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            toast.error('Lỗi khi tải ảnh lên Cloudinary: ' + error.message);
+            setImageFile(null);
+            setImagePreview(null);
+        } finally {
+            setIsUploadingImage(false);
+        }
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        setFormData(prev => ({
+            ...prev,
+            imageURL: ''
+        }));
+    };
 
     const updateMutation = useMutation({
         mutationFn: ({ id, data }) => decalTemplateService.updateDecalTemplate(id, data),
@@ -196,15 +262,71 @@ const EditDecalTemplatePage = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        URL hình ảnh
+                                        Hình ảnh mẫu decal
                                     </label>
-                                    <Input
-                                        name="imageURL"
-                                        value={formData.imageURL}
-                                        onChange={handleInputChange}
-                                        placeholder="Nhập URL hình ảnh"
-                                        error={errors.imageURL}
-                                    />
+
+                                    {!imagePreview ? (
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                                id="image-upload"
+                                                disabled={isUploadingImage}
+                                            />
+                                            <label htmlFor="image-upload" className="cursor-pointer">
+                                                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                                <p className="text-lg font-medium text-gray-900 mb-2">
+                                                    {isUploadingImage ? 'Đang tải lên...' : 'Tải lên hình ảnh'}
+                                                </p>
+                                                <p className="text-sm text-gray-500">
+                                                    Kéo thả file hoặc click để chọn (PNG, JPG, GIF - tối đa 5MB)
+                                                </p>
+                                            </label>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Template preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <div className="absolute top-2 right-2 flex gap-2">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={handleImageUpload}
+                                                        className="hidden"
+                                                        id="image-upload-edit"
+                                                        disabled={isUploadingImage}
+                                                    />
+                                                    <label
+                                                        htmlFor="image-upload-edit"
+                                                        className="bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full cursor-pointer transition-all"
+                                                    >
+                                                        <Upload className="w-4 h-4 text-gray-600" />
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={removeImage}
+                                                        className="bg-white bg-opacity-80 hover:bg-opacity-100 p-2 rounded-full transition-all"
+                                                    >
+                                                        <X className="w-4 h-4 text-red-600" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {isUploadingImage && (
+                                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                                                    <div className="bg-white p-4 rounded-lg flex items-center gap-3">
+                                                        <LoadingSpinner size="sm" />
+                                                        <span className="text-sm">Đang tải lên...</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>

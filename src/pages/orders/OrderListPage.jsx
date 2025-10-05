@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  User, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  Edit,
+  Trash2,
+  User,
   Calendar,
   MapPin,
   Phone,
@@ -18,13 +18,13 @@ import {
 } from 'lucide-react';
 import { useOrders, useDeleteOrder, useUpdateOrderStatus } from '../../hooks/useOrders';
 import { Button, Input, Card, Badge, LoadingSpinner } from '../../components/common';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '../../components/ui/Table';
 import {
   Pagination,
@@ -43,12 +43,12 @@ const OrderListPage = () => {
   // State cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  
+
   // State cho tìm kiếm và lọc
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  
+
   // State cho dropdown
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
@@ -101,7 +101,7 @@ const OrderListPage = () => {
   };
 
   const getStageInfo = (stageName) => {
-    return Object.values(ORDER_STAGES).find(stage => 
+    return Object.values(ORDER_STAGES).find(stage =>
       stage.label === stageName || stage.description.includes(stageName)
     ) || ORDER_STAGES.SURVEY;
   };
@@ -126,7 +126,7 @@ const OrderListPage = () => {
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -154,7 +154,7 @@ const OrderListPage = () => {
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
@@ -343,7 +343,6 @@ const OrderListPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Mã Đơn</TableHead>
                 <TableHead>Khách Hàng</TableHead>
                 <TableHead>Trạng Thái</TableHead>
                 <TableHead>Phương Tiện</TableHead>
@@ -357,17 +356,9 @@ const OrderListPage = () => {
             <TableBody>
               {orders.map((order) => {
                 const stageInfo = getStageInfo(order.currentStage);
-                
+
                 return (
                   <TableRow key={order.orderID}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div className="font-semibold">{order.orderID}</div>
-                        <div className="text-sm text-gray-500">
-                          {format(new Date(order.orderDate), 'dd/MM/yyyy HH:mm')}
-                        </div>
-                      </div>
-                    </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{order.customerFullName || 'N/A'}</div>
@@ -394,8 +385,8 @@ const OrderListPage = () => {
                         <Badge variant={getStatusColor(order.orderStatus)} size="sm">
                           {order.orderStatus}
                         </Badge>
-                        <Badge 
-                          className={getPriorityColor(order.priority)} 
+                        <Badge
+                          className={getPriorityColor(order.priority)}
                           size="sm"
                         >
                           {order.priority}
@@ -497,7 +488,7 @@ const OrderListPage = () => {
             <div className="text-sm text-gray-600">
               Hiển thị {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalItems)} của {totalItems} đơn hàng
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600">Hiển thị:</span>
@@ -513,16 +504,16 @@ const OrderListPage = () => {
                 </select>
                 <span className="text-sm text-gray-600">mỗi trang</span>
               </div>
-              
+
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious 
+                    <PaginationPrevious
                       onClick={() => handlePageChange(currentPage - 1)}
                       className={cn(currentPage === 1 && "pointer-events-none opacity-50")}
                     />
                   </PaginationItem>
-                  
+
                   {getPageNumbers().map((page, index) => (
                     <PaginationItem key={index}>
                       {page === 'ellipsis' ? (
@@ -537,9 +528,9 @@ const OrderListPage = () => {
                       )}
                     </PaginationItem>
                   ))}
-                  
+
                   <PaginationItem>
-                    <PaginationNext 
+                    <PaginationNext
                       onClick={() => handlePageChange(currentPage + 1)}
                       className={cn(currentPage === totalPages && "pointer-events-none opacity-50")}
                     />

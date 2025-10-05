@@ -14,10 +14,12 @@ const ModelEditPage = () => {
     const queryClient = useQueryClient();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Form state - chỉ 3 trường cơ bản
+    // Form state - bao gồm VehicleType và ChassisNumber
     const [formData, setFormData] = useState({
         modelName: '',
         brandID: '',
+        vehicleType: 'Xe máy',
+        chassisNumber: '',
         description: ''
     });
 
@@ -40,9 +42,12 @@ const ModelEditPage = () => {
     // Load model data into form
     useEffect(() => {
         if (model) {
+            console.log('Model data loaded:', model);
             setFormData({
                 modelName: model.modelName || '',
                 brandID: model.brandID || '',
+                vehicleType: 'Xe máy', // Nạp cứng giá trị
+                chassisNumber: 'DEFAULT_CHASSIS', // Nạp cứng giá trị
                 description: model.description || ''
             });
         }
@@ -81,7 +86,7 @@ const ModelEditPage = () => {
         }
     };
 
-    // Validation function - chỉ validate 2 trường bắt buộc
+    // Validation function - chỉ validate các trường hiển thị trên UI
     const validateForm = () => {
         const newErrors = {};
 
@@ -93,14 +98,20 @@ const ModelEditPage = () => {
             newErrors.brandID = 'Thương hiệu là bắt buộc';
         }
 
+        // vehicleType và chassisNumber đã được nạp cứng nên không cần validate
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     // Update model mutation
     const updateModelMutation = useMutation({
-        mutationFn: ({ id, data }) => vehicleModelService.updateVehicleModel(id, data),
+        mutationFn: ({ id, data }) => {
+            console.log('Mutation function called with:', { id, data });
+            return vehicleModelService.updateVehicleModel(id, data);
+        },
         onSuccess: (data) => {
+            console.log('Update successful:', data);
             toast.success('Cập nhật model thành công!');
             queryClient.invalidateQueries(['vehicle-models']);
             queryClient.invalidateQueries(['vehicle-model', id]);
@@ -108,7 +119,22 @@ const ModelEditPage = () => {
         },
         onError: (error) => {
             console.error('Error updating model:', error);
-            toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật model');
+            console.error('Error response:', error.response);
+            console.error('Error data:', error.response?.data);
+
+            let errorMessage = 'Có lỗi xảy ra khi cập nhật model';
+
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.response?.data?.errors) {
+                // Handle validation errors
+                const validationErrors = Object.values(error.response.data.errors).flat();
+                errorMessage = validationErrors.join(', ');
+            } else if (error.response?.status === 400) {
+                errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+            }
+
+            toast.error(errorMessage);
         }
     });
 
@@ -123,10 +149,22 @@ const ModelEditPage = () => {
 
         setIsSubmitting(true);
 
+        // Debug: Log the data being sent
+        console.log('Sending data:', { id, data: formData });
+
+        // Prepare update data - include all original fields with updated values
+        const updateData = {
+            ...model, // Include all original model data
+            ...formData // Override with form data
+        };
+
+        console.log('Update data prepared:', updateData);
+
         try {
-            await updateModelMutation.mutateAsync({ id, data: formData });
+            await updateModelMutation.mutateAsync({ id, data: updateData });
         } catch (error) {
             // Error is handled in mutation
+            console.error('Submit error:', error);
         } finally {
             setIsSubmitting(false);
         }
@@ -223,6 +261,7 @@ const ModelEditPage = () => {
                                     error={errors.brandID}
                                 />
                             </div>
+
                         </div>
                     </div>
 

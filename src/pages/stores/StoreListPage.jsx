@@ -266,7 +266,6 @@ const StoreListPage = () => {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{store.storeName}</p>
-                        <p className="text-sm text-gray-500">ID: {store.storeID}</p>
                       </div>
                     </div>
                   </td>

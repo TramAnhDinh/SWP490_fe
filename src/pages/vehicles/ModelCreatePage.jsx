@@ -12,10 +12,12 @@ const ModelCreatePage = () => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state - chỉ 3 trường cơ bản
+  // Form state - bao gồm VehicleType và ChassisNumber với dữ liệu nạp cứng
   const [formData, setFormData] = useState({
     modelName: '',
     brandID: '',
+    vehicleType: 'Xe máy', // Nạp cứng giá trị mặc định
+    chassisNumber: 'DEFAULT_CHASSIS', // Nạp cứng giá trị mặc định
     description: ''
   });
 
@@ -46,7 +48,7 @@ const ModelCreatePage = () => {
     }
   };
 
-  // Validation function - chỉ validate 2 trường bắt buộc
+  // Validation function - chỉ validate các trường hiển thị trên UI
   const validateForm = () => {
     const newErrors = {};
 
@@ -57,6 +59,8 @@ const ModelCreatePage = () => {
     if (!formData.brandID) {
       newErrors.brandID = 'Vui lòng chọn thương hiệu';
     }
+
+    // vehicleType và chassisNumber đã được nạp cứng nên không cần validate
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -176,6 +180,7 @@ const ModelCreatePage = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.brandID}</p>
                 )}
               </div>
+
             </div>
           </div>
 

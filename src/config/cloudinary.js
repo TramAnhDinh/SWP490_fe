@@ -2,16 +2,20 @@
 export const CLOUDINARY_CONFIG = {
     cloudName: 'ds7hzpmed',
     apiKey: '141368458813151',
-    // Note: API Secret should not be exposed in frontend code
-    // It should be handled by backend or serverless functions
-    uploadPreset: 'decal_templates', // You need to create this preset in Cloudinary console
+    apiSecret: '1lT-dul1f0HuhtHsxskn-dvCEBs', // Updated with your secret
+    uploadPreset: 'unsigned_upload', // Try unsigned upload preset
 };
 
 // Cloudinary upload function
 export const uploadToCloudinary = async (file, options = {}) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', options.uploadPreset || CLOUDINARY_CONFIG.uploadPreset);
+
+    // Try different presets
+    const uploadPreset = options.uploadPreset || CLOUDINARY_CONFIG.uploadPreset;
+    console.log('Using upload preset:', uploadPreset);
+
+    formData.append('upload_preset', uploadPreset);
     formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
 
     // Add additional options

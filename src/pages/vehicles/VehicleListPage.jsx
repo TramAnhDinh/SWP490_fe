@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Car, Settings, Edit, Trash2, Eye } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { Button, Input, Card, Badge, LoadingSpinner } from '../../components/common';
 import { vehicleBrandService } from '../../services/vehicleBrands';
 import { vehicleModelService } from '../../services/vehicleModels';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const VehicleListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('brands'); // 'brands' or 'models'
+  const queryClient = useQueryClient();
 
   // Fetch vehicle brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -24,18 +26,38 @@ const VehicleListPage = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const filteredBrands = brands?.filter(brand => 
-    searchTerm === '' || 
+  // Delete vehicle model mutation
+  const deleteModelMutation = useMutation({
+    mutationFn: (modelId) => vehicleModelService.deleteVehicleModel(modelId),
+    onSuccess: () => {
+      toast.success('Xóa model thành công!');
+      queryClient.invalidateQueries(['vehicle-models']);
+    },
+    onError: (error) => {
+      console.error('Error deleting model:', error);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi xóa model');
+    }
+  });
+
+  const filteredBrands = brands?.filter(brand =>
+    searchTerm === '' ||
     brand.brandName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     brand.description?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  const filteredModels = models?.filter(model => 
-    searchTerm === '' || 
+  const filteredModels = models?.filter(model =>
+    searchTerm === '' ||
     model.modelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     model.brandName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     model.description?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+
+  // Handle delete model
+  const handleDeleteModel = async (modelId, modelName) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa model "${modelName}"?`)) {
+      deleteModelMutation.mutate(modelId);
+    }
+  };
 
   const isLoading = brandsLoading || modelsLoading;
 
@@ -76,21 +98,19 @@ const VehicleListPage = () => {
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('brands')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'brands'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'brands'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
           >
             Thương hiệu ({filteredBrands.length})
           </button>
           <button
             onClick={() => setActiveTab('models')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'models'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'models'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
           >
             Mẫu xe ({filteredModels.length})
           </button>
@@ -170,7 +190,7 @@ const VehicleListPage = () => {
                     </Button>
                   </Link>
                 </div>
-                
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -231,23 +251,6 @@ const VehicleListPage = () => {
                 )}
               </div>
 
-              {/* Statistics */}
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Decal types:</span>
-                    <span className="ml-2 font-semibold text-gray-900">
-                      {model.decalTypeCount || 0}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Templates:</span>
-                    <span className="ml-2 font-semibold text-gray-900">
-                      {model.templateCount || 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
 
               {/* Actions */}
               <div className="flex justify-between pt-4 border-t border-gray-200">
@@ -265,11 +268,13 @@ const VehicleListPage = () => {
                     </Button>
                   </Link>
                 </div>
-                
+
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => handleDeleteModel(model.modelID, model.modelName)}
+                  disabled={deleteModelMutation.isPending}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

@@ -9,95 +9,111 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Shield
+  Shield,
+  Store,
+  Building
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { orderService } from '../services/orders';
-import { customerService } from '../services/customers';
+import { dashboardStatsService } from '../services/dashboardStatsService';
 import { Link } from 'react-router-dom';
 
 const DashboardPage = () => {
-  // Fetch real data from API
-  const { data: orders, isLoading: ordersLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => orderService.getOrders(),
-    staleTime: 1000 * 60 * 5,
+  // Fetch dashboard statistics from API
+  const { data: dashboardStats, isLoading, error } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: () => dashboardStatsService.getDashboardStats(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
-  const { data: customers, isLoading: customersLoading } = useQuery({
-    queryKey: ['customers'],
-    queryFn: () => customerService.getCustomers(),
-    staleTime: 1000 * 60 * 5,
-  });
+  // Format currency for Vietnamese Dong
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
-  const { data: accounts, isLoading: accountsLoading } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: () => import('../services/accountService').then(module => module.accountService.getAccounts()),
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const isLoading = ordersLoading || customersLoading || accountsLoading;
+  // Format number with thousand separators
+  const formatNumber = (number) => {
+    return new Intl.NumberFormat('vi-VN').format(number);
+  };
 
   // Calculate stats from real data
   const stats = [
     {
+      title: 'Tổng doanh thu',
+      value: formatCurrency(dashboardStats?.totalRevenue || 0),
+      icon: DollarSign,
+      color: 'bg-green-500',
+      description: 'Từ đơn hàng đã nghiệm thu',
+    },
+    {
       title: 'Tổng đơn hàng',
-      value: orders?.length?.toString() || '0',
-      change: '+12%',
-      changeType: 'increase',
+      value: formatNumber(dashboardStats?.totalOrders || 0),
       icon: ShoppingCart,
       color: 'bg-blue-500',
+      description: 'Tất cả đơn hàng trong hệ thống',
     },
     {
-      title: 'Khách hàng',
-      value: customers?.length?.toString() || '0',
-      change: '+8%',
-      changeType: 'increase',
+      title: 'Tổng khách hàng',
+      value: formatNumber(dashboardStats?.totalCustomers || 0),
       icon: Users,
-      color: 'bg-green-500',
-    },
-    {
-      title: 'Tài khoản',
-      value: accounts?.length?.toString() || '0',
-      change: '+5%',
-      changeType: 'increase',
-      icon: Shield,
-      color: 'bg-red-500',
-    },
-    {
-      title: 'Phương tiện',
-      value: '234',
-      change: '+15%',
-      changeType: 'increase',
-      icon: Car,
       color: 'bg-purple-500',
+      description: 'Số lượng khách hàng',
     },
     {
-      title: 'Doanh thu',
-      value: '125.6M',
-      change: '+23%',
-      changeType: 'increase',
-      icon: DollarSign,
-      color: 'bg-yellow-500',
+      title: 'Giá trị đơn hàng TB',
+      value: formatCurrency(dashboardStats?.averageOrderValue || 0),
+      icon: TrendingUp,
+      color: 'bg-orange-500',
+      description: 'Trung bình mỗi đơn hàng',
+    },
+    {
+      title: 'Tổng cửa hàng',
+      value: formatNumber(dashboardStats?.totalStores || 0),
+      icon: Store,
+      color: 'bg-indigo-500',
+      description: 'Cửa hàng trong hệ thống',
+    },
+    {
+      title: 'Tổng nhân viên',
+      value: formatNumber(dashboardStats?.totalEmployees || 0),
+      icon: Building,
+      color: 'bg-pink-500',
+      description: 'Nhân viên trong hệ thống',
     },
   ];
 
   // Get recent orders from real data
-  const recentOrders = orders?.slice(0, 3).map(order => ({
+  const recentOrders = dashboardStats?.rawData?.orders?.slice(0, 3).map(order => ({
     id: order.orderID,
     customer: order.customerFullName || 'N/A',
     vehicle: order.vehicleModelName || 'N/A',
     status: order.orderStatus,
     priority: order.priority || 'Medium',
     date: order.orderDate,
+    currentStage: order.currentStage,
   })) || [];
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Khảo sát': return 'primary';
-      case 'Thiết kế': return 'warning';
-      case 'Thi công': return 'info';
-      case 'Hoàn thành': return 'success';
+      case 'New': return 'primary';
+      case 'In Progress': return 'warning';
+      case 'Completed': return 'success';
+      case 'Cancelled': return 'danger';
+      default: return 'default';
+    }
+  };
+
+  const getStageColor = (stage) => {
+    switch (stage) {
+      case 'Survey': return 'primary';
+      case 'Designing': return 'warning';
+      case 'ProductionAndInstallation': return 'info';
+      case 'AcceptanceAndDelivery': return 'success';
       default: return 'default';
     }
   };
@@ -119,6 +135,17 @@ const DashboardPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-600">
+          <p className="font-semibold">Lỗi khi tải dữ liệu dashboard</p>
+          <p className="text-sm">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -128,18 +155,16 @@ const DashboardPage = () => {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stats.map((stat, index) => (
           <Card key={index} className="p-6">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                 <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                <div className="flex items-center mt-1">
-                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-sm text-green-600">{stat.change}</span>
-                  <span className="text-sm text-gray-500 ml-1">so với tháng trước</span>
-                </div>
+                {stat.description && (
+                  <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                )}
               </div>
               <div className={`p-3 rounded-lg ${stat.color}`}>
                 <stat.icon className="h-6 w-6 text-white" />
@@ -147,6 +172,60 @@ const DashboardPage = () => {
             </div>
           </Card>
         ))}
+      </div>
+
+      {/* System Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* System Stats */}
+        <Card>
+          <Card.Header>
+            <Card.Title>Tổng quan hệ thống</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Tổng cửa hàng:</span>
+                <span className="font-semibold">{formatNumber(dashboardStats?.totalStores || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Tổng nhân viên:</span>
+                <span className="font-semibold">{formatNumber(dashboardStats?.totalEmployees || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Tổng đơn hàng:</span>
+                <span className="font-semibold">{formatNumber(dashboardStats?.totalOrders || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Tổng doanh thu:</span>
+                <span className="font-semibold text-green-600">{formatCurrency(dashboardStats?.totalRevenue || 0)}</span>
+              </div>
+            </div>
+          </Card.Content>
+        </Card>
+
+        {/* Orders by Stage */}
+        <Card>
+          <Card.Header>
+            <Card.Title>Đơn hàng theo giai đoạn</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <div className="space-y-3">
+              {dashboardStats?.ordersByStage && Object.entries(dashboardStats.ordersByStage).map(([stage, count]) => (
+                <div key={stage} className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    {stage === 'AcceptanceAndDelivery' ? 'Đã nghiệm thu' :
+                      stage === 'ProductionAndInstallation' ? 'Đang thi công' :
+                        stage === 'Designing' ? 'Đang thiết kế' :
+                          stage === 'Survey' ? 'Đang khảo sát' : stage}
+                  </span>
+                  <Badge variant={getStageColor(stage)} size="sm">
+                    {count} đơn
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </Card.Content>
+        </Card>
       </div>
 
       {/* Recent orders */}
@@ -174,6 +253,11 @@ const DashboardPage = () => {
                     <Badge variant={getStatusColor(order.status)} size="sm">
                       {order.status}
                     </Badge>
+                    {order.currentStage && (
+                      <Badge variant={getStageColor(order.currentStage)} size="sm" className="mt-1">
+                        {order.currentStage === 'AcceptanceAndDelivery' ? 'Đã nghiệm thu' : order.currentStage}
+                      </Badge>
+                    )}
                     <p className="text-xs text-gray-500 mt-1">{order.date}</p>
                   </div>
                 </div>

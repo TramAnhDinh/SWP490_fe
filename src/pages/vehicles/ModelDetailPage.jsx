@@ -224,57 +224,6 @@ const ModelDetailPage = () => {
                             </div>
                         </Card>
                     )}
-
-                    {/* Statistics */}
-                    <Card className="p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Thống kê</h3>
-
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Trạng thái</span>
-                                <Badge variant={model.isActive ? "success" : "secondary"} size="sm">
-                                    {model.isActive ? 'Hoạt động' : 'Không hoạt động'}
-                                </Badge>
-                            </div>
-
-                            {model.year && (
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Năm sản xuất</span>
-                                    <span className="font-semibold text-gray-900">{model.year}</span>
-                                </div>
-                            )}
-
-                            {model.bodyType && (
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Loại thân xe</span>
-                                    <span className="font-semibold text-gray-900">{model.bodyType}</span>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-
-                    {/* Quick Actions */}
-                    <Card className="p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Hành động nhanh</h3>
-
-                        <div className="space-y-3">
-                            <Link to={`/vehicles/models/${id}/edit`}>
-                                <Button variant="outline" className="w-full">
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Chỉnh sửa mẫu xe
-                                </Button>
-                            </Link>
-
-                            {brand && (
-                                <Link to={`/vehicles/brands/${brand.brandID}`}>
-                                    <Button className="w-full">
-                                        <Building className="h-4 w-4 mr-2" />
-                                        Xem thương hiệu
-                                    </Button>
-                                </Link>
-                            )}
-                        </div>
-                    </Card>
                 </div>
             </div>
         </div>

@@ -36,14 +36,14 @@ const navigation = [
     name: "Tổng quan",
     href: "/dashboard",
     icon: Home,
-    roles: ["Manager", "Sales", "Technician", "Customer"],
+    roles: ["Admin", "Manager", "Sales", "Technician", "Customer"],
   },
-  {
-    name: "Tổng quan quản trị",
-    href: "/admin",
-    icon: Shield,
-    roles: ["Admin"],
-  },
+  // {
+  //   name: "Tổng quan quản trị",
+  //   href: "/admin",
+  //   icon: Shield,
+  //   roles: ["Admin"],
+  // },
   {
     name: 'Cửa hàng',
     icon: Building,
@@ -62,22 +62,22 @@ const navigation = [
   //   ],
   // },
   {
-  name: "Đơn hàng",
-  icon: ShoppingCart,
-  roles: ["Admin", "Manager", "Sales", "Technician"],
-  children: [
-    { 
-      name: "Danh sách đơn hàng", 
-      href: "/orders" 
-    },
-  ],
-},
-{
-  name: "Tạo đơn hàng mới",
-  icon: ShoppingCart,
-  roles: ["Sales", "Technician"],
-  href: "/orders/create",
-},
+    name: "Đơn hàng",
+    icon: ShoppingCart,
+    roles: ["Admin", "Manager", "Sales", "Technician"],
+    children: [
+      {
+        name: "Danh sách đơn hàng",
+        href: "/orders"
+      },
+    ],
+  },
+  {
+    name: "Tạo đơn hàng mới",
+    icon: ShoppingCart,
+    roles: ["Sales", "Technician"],
+    href: "/orders/create",
+  },
 
   {
     name: 'Lắp đặt',
@@ -108,46 +108,54 @@ const navigation = [
   {
     name: "Thiết kế",
     icon: Palette,
-    roles: ['Manager', 'Designer'],
+    roles: ['Manager'],
     children: [
-      { name: "Thư viện thiết kế", href: "/designs" },
       { name: "Thư viện mẫu", href: "/templates" },
       { name: "Duyệt thiết kế", href: "/designs/approval" },
     ],
   },
   {
-    name: 'Dashboard Designer',
-    href: '/designer-dashboard',
+    name: "Tạo thiết kế",
     icon: Palette,
     roles: ['Designer'],
+    children: [
+      { name: "Thư viện thiết kế", href: "/designs" },
+      { name: "Thư viện mẫu", href: "/templates" }
+    ],
   },
+  // {
+  //   name: 'Dashboard Designer',
+  //   href: '/designer-dashboard',
+  //   icon: Palette,
+  //   roles: ['Designer'],
+  // },
   {
     name: 'Nhân viên',
     icon: Users,
     roles: ["Admin", "Manager"],
     children: [
       { name: 'Danh sách nhân viên', href: '/employees' },
-      { name: 'Theo dõi hiệu suất', href: '/performance' },
+      // { name: 'Theo dõi hiệu suất', href: '/performance' },
     ],
   },
-  {
-    name: 'Dashboard Quản lý',
-    href: '/manager-dashboard',
-    icon: BarChart3,
-    roles: ['Manager'],
-  },
+  // {
+  //   name: 'Dashboard Quản lý',
+  //   href: '/manager-dashboard',
+  //   icon: BarChart3,
+  //   roles: ['Manager'],
+  // },
 
-  {
-    name: 'Thông báo & Tin nhắn',
-    icon: Bell,
-    roles: ['Sales', 'Technician', 'Designer'],
-    children: [
-      { name: 'Danh sách thông báo', href: '/notifications' },
-      { name: 'Tạo thông báo mới', href: '/notifications/create' },
-      { name: 'Trung tâm thông báo', href: '/notifications/center' },
-      { name: 'Hệ thống tin nhắn', href: '/notifications/messages' },
-    ],
-  },
+  // {
+  //   name: 'Thông báo & Tin nhắn',
+  //   icon: Bell,
+  //   roles: ['Sales', 'Technician', 'Designer'],
+  //   children: [
+  //     { name: 'Danh sách thông báo', href: '/notifications' },
+  //     { name: 'Tạo thông báo mới', href: '/notifications/create' },
+  //     { name: 'Trung tâm thông báo', href: '/notifications/center' },
+  //     { name: 'Hệ thống tin nhắn', href: '/notifications/messages' },
+  //   ],
+  // },
   {
     name: 'Dịch vụ & Kho',
     icon: Package,
@@ -159,34 +167,34 @@ const navigation = [
 
     ],
   },
-  {
-    name: "Tài chính",
-    icon: DollarSign,
-    roles: ['Manager'],
-    children: [
-      { name: "Xử lý thanh toán", href: "/payments/processing" },
-      { name: "Quản lý hóa đơn", href: "/payments/invoices" },
-      { name: "Báo cáo tài chính", href: "/payments/reports" },
-      { name: "Theo dõi đặt cọc", href: "/payments/deposits" },
-    ],
-  },
-  {
-    name: "Bảo hành & Hỗ trợ",
-    icon: Shield,
-    roles: ["Manager", "Sales", "Technician"],
-    children: [
-      { name: "Quản lý bảo hành", href: "/warranty/management" },
-      { name: "Hệ thống phản hồi", href: "/feedback" },
-      { name: "Ticket hỗ trợ", href: "/support/tickets" },
-    ],
-  },
+  // {
+  //   name: "Tài chính",
+  //   icon: DollarSign,
+  //   roles: ['Manager'],
+  //   children: [
+  //     { name: "Xử lý thanh toán", href: "/payments/processing" },
+  //     { name: "Quản lý hóa đơn", href: "/payments/invoices" },
+  //     { name: "Báo cáo tài chính", href: "/payments/reports" },
+  //     { name: "Theo dõi đặt cọc", href: "/payments/deposits" },
+  //   ],
+  // },
+  // {
+  //   name: "Bảo hành & Hỗ trợ",
+  //   icon: Shield,
+  //   roles: ["Manager", "Sales", "Technician"],
+  //   children: [
+  //     { name: "Quản lý bảo hành", href: "/warranty/management" },
+  //     { name: "Hệ thống phản hồi", href: "/feedback" },
+  //     { name: "Ticket hỗ trợ", href: "/support/tickets" },
+  //   ],
+  // },
   {
     name: "Phân tích & Báo cáo",
     icon: BarChart3,
     roles: ["Admin", "Manager"],
     children: [
       { name: "Báo cáo tổng quan", href: "/analytics" },
-      { name: "Báo cáo chi tiết", href: "/reports" },
+      //{ name: "Báo cáo chi tiết", href: "/reports" },
     ],
   },
 ];
